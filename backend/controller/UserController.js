@@ -48,12 +48,9 @@ export const loginUser = async (req, res) => {
       "+password"
     );
     if (!user) {
-      return res.status(400).json({ message: "phone does not exist" });
+      return res.status(400).json({ message: "Username does not exist" });
     }
-    // ✅ Check active status
-    if (user.status !== "active") {
-      return res.status(403).json({ message: "Akoon kan Active maaha" });
-    }
+    // Note: status field removed - all users are active by default
 
 
     const isPasswordCorrect = await user.comparePassword(password);
