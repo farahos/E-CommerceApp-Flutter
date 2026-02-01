@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../providers/product_provider.dart';
-import '../../../providers/cart_provider.dart';
-import '../../../models/product_model.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../core/constants/app_colors.dart';
-
+import 'package:ecommerce_app/models/product_model.dart';
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/core/constants/app_colors.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:go_router/go_router.dart';
 class ProductDetailsScreen extends StatefulWidget {
   final String productId;
 
@@ -325,7 +326,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, _) {
           if (productProvider.isLoading) {
-            return const Center(child: Loader());
+            return Center(child: Loader());
           }
 
           final product = productProvider.selectedProduct;
@@ -457,7 +458,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 // Add to Cart Button
                 Expanded(
                   child: CustomButton(
-                    onPressed: product.isInStock ? _addToCart : null,
+                    onPressed: product.isInStock ? () => _addToCart() : null,
                     text: product.isInStock
                         ? 'Add to Cart'
                         : 'Out of Stock',

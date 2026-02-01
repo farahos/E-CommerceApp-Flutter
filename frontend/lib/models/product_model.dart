@@ -22,21 +22,22 @@ class ProductModel {
     required this.updatedAt,
     this.categoryName,
   });
-
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['_id'],
-      name: json['name'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      stock: json['stock'] ?? 0,
-      description: json['description'] ?? '',
-      images: List<String>.from(json['images'] ?? []),
-      categoryId: json['categoryId'] ?? '',
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      categoryName: json['category']?['name'],
-    );
-  }
+factory ProductModel.fromJson(Map<String, dynamic> json) {
+  return ProductModel(
+    id: json['_id'],
+    name: json['name'],
+    description: json['description'],
+    price: (json['price'] as num).toDouble(),
+    stock: json['stock'],
+    categoryName: json['category']?['name'],
+    categoryId: json['category']?['_id'] ?? '',
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
+    images: (json['images'] as List)
+        .map((img) => img['url'].toString())
+        .toList(),
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {

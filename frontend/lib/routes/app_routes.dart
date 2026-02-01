@@ -2,60 +2,82 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/auth_provider.dart';
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/register_screen.dart';
-import '../screens/auth/splash_screen.dart';
-import '../screens/admin/admin_dashboard.dart';
-import '../screens/admin/products/admin_products_screen.dart';
-import '../screens/admin/products/add_product_screen.dart';
-import '../screens/admin/products/edit_product_screen.dart';
-import '../screens/admin/categories/admin_categories_screen.dart';
-import '../screens/admin/categories/add_category_screen.dart';
-import '../screens/admin/orders/admin_orders_screen.dart';
-import '../screens/admin/profile/admin_profile_screen.dart';
-import '../screens/user/user_dashboard.dart';
-import '../screens/user/home/home_screen.dart';
-import '../screens/user/products/product_details_screen.dart';
-import '../screens/user/cart/cart_screen.dart';
-import '../screens/user/orders/my_orders_screen.dart';
-import '../screens/user/profile/user_profile_screen.dart';
+// Providers
+import 'package:ecommerce_app/providers/auth_provider.dart';
+
+// Auth Screens
+import 'package:ecommerce_app/screens/auth/splash_screen.dart';
+import 'package:ecommerce_app/screens/auth/login_screen.dart';
+import 'package:ecommerce_app/screens/auth/register_screen.dart';
+import 'package:ecommerce_app/screens/auth/forgot_password_screen.dart';
+
+// Admin Screens
+import 'package:ecommerce_app/screens/admin/admin_dashboard.dart';
+import 'package:ecommerce_app/screens/admin/admin_products_screen.dart';
+import 'package:ecommerce_app/screens/admin/add_product_screen.dart';
+import 'package:ecommerce_app/screens/admin/edit_product_screen.dart';
+import 'package:ecommerce_app/screens/admin/admin_categories_screen.dart';
+import 'package:ecommerce_app/screens/admin/add_category_screen.dart';
+import 'package:ecommerce_app/screens/admin/admin_orders_screen.dart';
+import 'package:ecommerce_app/screens/admin/admin_profile_screen.dart';
+
+// User Screens
+import 'package:ecommerce_app/screens/user/user_dashboard.dart';
+import 'package:ecommerce_app/screens/user/home/home_screen.dart';
+import 'package:ecommerce_app/screens/user/products/product_details_screen.dart';
+import 'package:ecommerce_app/screens/user/cart/cart_screen.dart';
+import 'package:ecommerce_app/screens/user/orders/my_orders_screen.dart';
+import 'package:ecommerce_app/screens/user/profile/user_profile_screen.dart';
 
 class AppRoutes {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
-    redirect: (context, state) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final isLoggedIn = authProvider.isAuthenticated;
-      final isAdmin = authProvider.isAdmin;
-      final location = state.location;
 
-      // If not logged in, redirect to splash (which will go to login)
-      if (!isLoggedIn && !location.startsWith('/auth')) {
-        return '/splash';
+    // 🔐 AUTH & ROLE GUARD
+    redirect: (BuildContext context, GoRouterState state) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+
+      final bool isLoggedIn = auth.isAuthenticated;
+      final bool isAdmin = auth.isAdmin;
+      final String location = state.matchedLocation;
+
+      // 1️⃣ Not logged in → only allow auth pages
+      if (!isLoggedIn) {
+        final allowed = [
+          '/splash',
+          '/login',
+          '/register',
+          '/forgot-password',
+        ];
+        if (!allowed.contains(location)) {
+          return '/login';
+        }
       }
 
-      // If logged in as admin trying to access user routes
+      // 2️⃣ Logged in admin → block user routes
       if (isLoggedIn && isAdmin && location.startsWith('/user')) {
         return '/admin/dashboard';
       }
 
-      // If logged in as user trying to access admin routes
+      // 3️⃣ Logged in user → block admin routes
       if (isLoggedIn && !isAdmin && location.startsWith('/admin')) {
         return '/user/dashboard';
       }
 
-      return null;
+      return null; // allow navigation
     },
+
+    // 🧭 ROUTES
     routes: [
-      // Splash screen
+
+      /// SPLASH
       GoRoute(
         path: '/splash',
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
 
-      // Auth routes
+      /// AUTH
       GoRoute(
         path: '/login',
         name: 'login',
@@ -66,8 +88,13 @@ class AppRoutes {
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot_password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
 
-      // Admin routes
+      /// ADMIN
       GoRoute(
         path: '/admin/dashboard',
         name: 'admin_dashboard',
@@ -111,7 +138,7 @@ class AppRoutes {
         builder: (context, state) => const AdminProfileScreen(),
       ),
 
-      // User routes
+      /// USER
       GoRoute(
         path: '/user/dashboard',
         name: 'user_dashboard',
@@ -145,6 +172,8 @@ class AppRoutes {
         builder: (context, state) => const UserProfileScreen(),
       ),
     ],
+
+    // ❌ 404 PAGE
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Column(
@@ -152,20 +181,14 @@ class AppRoutes {
           children: [
             const Text(
               '404',
-              style: TextStyle(
-                fontSize: 64,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Page not found',
-              style: TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            const Text('Page not found'),
+            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => context.go('/user/home'),
-              child: const Text('Go to Home'),
+              onPressed: () => context.go('/login'),
+              child: const Text('Go to Login'),
             ),
           ],
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
-
+import 'package:ecommerce_app/core/constants/app_colors.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
 class CustomInput extends StatelessWidget {
   final TextEditingController? controller;
   final String label;

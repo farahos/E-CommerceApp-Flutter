@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/order_provider.dart';
-import '../../providers/product_provider.dart';
-import '../../widgets/common/custom_button.dart';
-import '../../widgets/common/loader.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:ecommerce_app/providers/auth_provider.dart';
+import 'package:ecommerce_app/providers/order_provider.dart';
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
 
+import 'package:ecommerce_app/core/constants/app_colors.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:go_router/go_router.dart';
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
@@ -83,28 +86,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
               leading: const Icon(Icons.inventory),
               title: const Text('Manage Products'),
               onTap: () {
-                Navigator.pushNamed(context, '/admin/products');
+                      context.go('/admin/products');
               },
             ),
             ListTile(
               leading: const Icon(Icons.category),
               title: const Text('Manage Categories'),
               onTap: () {
-                Navigator.pushNamed(context, '/admin/categories');
+                context.go('/admin/categories');
               },
             ),
             ListTile(
               leading: const Icon(Icons.shopping_cart),
               title: const Text('Manage Orders'),
               onTap: () {
-                Navigator.pushNamed(context, '/admin/orders');
+                context.go('/admin/orders');
               },
             ),
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
               onTap: () {
-                Navigator.pushNamed(context, '/admin/profile');
+                context.go('/admin/profile');
               },
             ),
           ],
@@ -121,7 +124,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: Consumer<OrderProvider>(
                   builder: (context, orderProvider, _) {
                     if (orderProvider.isLoading) {
-                      return const Loader();
+                      return Loader();
                     }
 
                     final stats = orderProvider.getOrderStats();
@@ -235,7 +238,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Consumer<OrderProvider>(
                       builder: (context, orderProvider, _) {
                         if (orderProvider.isLoading) {
-                          return const Center(child: Loader());
+                           Center(child: Loader());
                         }
 
                         final recentOrders = orderProvider.adminOrders

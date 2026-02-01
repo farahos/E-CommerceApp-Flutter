@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/product_provider.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../widgets/common/confirm_dialog.dart';
-import '../../../core/constants/app_strings.dart';
-
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:go_router/go_router.dart';
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
 
@@ -55,7 +55,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.pushNamed(context, '/admin/products/add');
+              context.go('/admin/products/add');
             },
           ),
         ],
@@ -63,7 +63,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, _) {
           if (productProvider.isLoading) {
-            return const Center(child: Loader());
+            return Center(child: Loader());
           }
 
           if (productProvider.error.isNotEmpty) {
@@ -100,7 +100,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
                   const SizedBox(height: 24),
                   CustomButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/admin/products/add');
+                      context.go('/admin/products/add');
                     },
                     text: 'Add First Product',
                     variant: ButtonVariant.primary,

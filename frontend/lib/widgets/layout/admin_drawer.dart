@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-
+import 'package:ecommerce_app/providers/auth_provider.dart';
 class AdminDrawer extends StatelessWidget {
   const AdminDrawer({super.key});
 
@@ -60,7 +59,7 @@ class AdminDrawer extends StatelessWidget {
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/admin/dashboard');
+              context.go('/admin/dashboard');
             },
           ),
 
@@ -73,14 +72,14 @@ class AdminDrawer extends StatelessWidget {
                 leading: const Icon(Icons.list, size: 20),
                 title: const Text('All Products'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/admin/products');
+                  context.go('/admin/products');
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.add, size: 20),
                 title: const Text('Add Product'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/admin/products/add');
+                  context.go('/admin/products/add');
                 },
               ),
             ],
@@ -95,14 +94,14 @@ class AdminDrawer extends StatelessWidget {
                 leading: const Icon(Icons.list, size: 20),
                 title: const Text('All Categories'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/admin/categories');
+                  context.go('/admin/categories');
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.add, size: 20),
                 title: const Text('Add Category'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/admin/categories/add');
+                  context.go('/admin/categories/add');
                 },
               ),
             ],
@@ -113,8 +112,7 @@ class AdminDrawer extends StatelessWidget {
             leading: const Icon(Icons.shopping_cart),
             title: const Text('Orders'),
             onTap: () {
-              Navigator.pushNamed(context, '/admin/orders');
-            },
+              context.go('/admin/orders');},
           ),
 
           // Users
@@ -133,7 +131,7 @@ class AdminDrawer extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
-              Navigator.pushNamed(context, '/admin/profile');
+              context.go('/admin/profile');
             },
           ),
 
@@ -169,8 +167,7 @@ class AdminDrawer extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         authProvider.logout();
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
+                        Navigator.popUntil(context, (route) => route.isFirst);},
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),

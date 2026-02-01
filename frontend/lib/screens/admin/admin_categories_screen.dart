@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/category_provider.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/providers/category_provider.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -62,7 +63,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
       body: Consumer<CategoryProvider>(
         builder: (context, categoryProvider, _) {
           if (categoryProvider.isLoading) {
-            return const Center(child: Loader());
+            return Center(child: Loader());
           }
 
           if (categoryProvider.error.isNotEmpty) {

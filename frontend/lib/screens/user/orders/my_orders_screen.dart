@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/order_provider.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/helpers.dart';
+import 'package:ecommerce_app/models/order_model.dart';
+import 'package:ecommerce_app/providers/order_provider.dart';
+import 'package:ecommerce_app/core/constants/app_colors.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/utils/helpers.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -214,7 +215,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             child: Consumer<OrderProvider>(
               builder: (context, orderProvider, _) {
                 if (orderProvider.isLoading) {
-                  return const Center(child: Loader());
+                  return Center(child: Loader());
                 }
 
                 if (orderProvider.error.isNotEmpty) {

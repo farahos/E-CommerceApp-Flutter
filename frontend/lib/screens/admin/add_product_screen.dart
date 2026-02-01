@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker_web/image_picker_web.dart';
-import '../../../providers/product_provider.dart';
-import '../../../providers/category_provider.dart';
-import '../../../widgets/common/custom_input.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../models/product_model.dart';
-import '../../../core/utils/validators.dart';
-
+import 'package:ecommerce_app/models/product_model.dart';
+import 'package:ecommerce_app/providers/category_provider.dart';
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
 
@@ -271,7 +270,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       Consumer<CategoryProvider>(
                         builder: (context, categoryProvider, _) {
                           if (categoryProvider.isLoading) {
-                            return const Loader();
+                            return Loader();
                           }
                           
                           return DropdownButtonFormField<String>(
@@ -328,19 +327,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
               
               const SizedBox(height: 24),
               
-              Consumer<ProductProvider>(
-                builder: (context, productProvider, _) {
-                  if (productProvider.isLoading) {
-                    return const Center(child: Loader());
-                  }
-                  
-                  return CustomButton(
-                    onPressed: _saveProduct,
-                    text: 'Save Product',
-                    variant: ButtonVariant.primary,
-                  );
-                },
-              ),
+            Consumer<ProductProvider>(
+  builder: (context, productProvider, _) {
+    if (productProvider.isLoading) {
+      return Center(child: Loader());
+    }
+
+    return CustomButton(
+      onPressed: _saveProduct,
+      text: 'Save Product',
+      variant: ButtonVariant.primary,
+    );
+  },
+),
+
             ],
           ),
         ),

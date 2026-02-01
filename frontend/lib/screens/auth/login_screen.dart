@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/common/custom_input.dart';
-import '../../widgets/common/custom_button.dart';
-import '../../widgets/common/loader.dart';
-import '../../core/constants/app_strings.dart';
-
+import 'package:ecommerce_app/providers/auth_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart'; 
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/constants/app_strings.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:go_router/go_router.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -36,12 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
 
-        if (authProvider.isAuthenticated) {
-          if (authProvider.isAdmin) {
-            Navigator.pushReplacementNamed(context, '/admin/dashboard');
-          } else {
-            Navigator.pushReplacementNamed(context, '/user/dashboard');
-          }
+        if (authProvider.isAdmin) {
+          context.go('/admin/dashboard');
+        } else {
+          context.go('/user/dashboard');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _emailController,
                         label: AppStrings.email,
                         hint: 'you@example.com',
-                        prefixIcon: Icons.email_outlined,
+                        prefixIcon: Icon(Icons.email_outlined),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -125,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         label: AppStrings.password,
                         hint: 'Enter your password',
-                        prefixIcon: Icons.lock_outline,
+                        prefixIcon: Icon(Icons.lock_outline),
                         obscureText: _obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -143,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (value == null || value.isEmpty) {
                             return AppStrings.requiredField;
                           }
-                          if (value.length < 6) {
+                          if (value.length < 3) {
                             return AppStrings.passwordTooShort;
                           }
                           return null;
@@ -156,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pushNamed(context, '/forgot-password');
+                            context.push('/forgot-password');
                           },
                           child: Text(AppStrings.forgotPassword),
                         ),
@@ -167,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, _) {
                           if (authProvider.isLoading) {
-                            return const Center(child: Loader());
+                            return Center(child: Loader());
                           }
                           
                           return CustomButton(
@@ -189,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushNamed(context, '/register');
+                              context.push('/register');
                             },
                             child: Text(AppStrings.register),
                           ),

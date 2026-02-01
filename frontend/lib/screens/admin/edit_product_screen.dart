@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:e_commerce_app/providers/product_provider.dart';
-import 'package:e_commerce_app/providers/category_provider.dart';
-import 'package:e_commerce_app/widgets/common/custom_button.dart';
-import 'package:e_commerce_app/widgets/common/custom_input.dart';
-import 'package:e_commerce_app/widgets/common/loader.dart';
-import 'package:e_commerce_app/core/utils/validators.dart';
+import 'package:ecommerce_app/providers/category_provider.dart';
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:ecommerce_app/models/product_model.dart';
 
 class EditProductScreen extends StatefulWidget {
   final String productId;
@@ -73,22 +74,31 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   Future<void> _updateProduct() async {
     if (_formKey.currentState!.validate() && _selectedCategoryId != null) {
-      final productProvider = Provider.of<ProductProvider>(context, listen: false);
-      
-      final productData = {
-        'name': _nameController.text.trim(),
-        'price': double.parse(_priceController.text),
-        'stock': int.parse(_stockController.text),
-        'description': _descriptionController.text.trim(),
-        'images': _imageControllers
-            .where((controller) => controller.text.isNotEmpty)
-            .map((controller) => controller.text.trim())
-            .toList(),
-        'categoryId': _selectedCategoryId,
-      };
+      final productProvider =
+          Provider.of<ProductProvider>(context, listen: false);
 
-      final success = await productProvider.updateProduct(widget.productId, productData);
-      
+      // Create ProductModel object instead of Map
+      final updatedProduct = ProductModel(
+        id: widget.productId,
+        name: _nameController.text.trim(),
+        price: double.parse(_priceController.text),
+        stock: int.parse(_stockController.text),
+        description: _descriptionController.text.trim(),
+        images: _imageControllers
+            .where((c) => c.text.isNotEmpty)
+            .map((c) => c.text.trim())
+            .toList(),
+        categoryId: _selectedCategoryId!,
+        // Add any other required fields from your ProductModel constructor
+        // If your ProductModel has additional fields like createdAt, ratings, etc.
+        // you might need to preserve them:
+        createdAt: productProvider.selectedProduct?.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
+        // Add any other fields that are required by your ProductModel constructor
+      );
+
+      final success = await productProvider.updateProduct(updatedProduct);
+
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -157,31 +167,31 @@ class _EditProductScreenState extends State<EditProductScreen> {
             children: [
               CustomInput(
                 controller: _nameController,
-                labelText: 'Product Name',
+                label: 'Product Name',
                 validator: (value) => Validators.validateRequired(value, 'Product name'),
               ),
               const SizedBox(height: 16),
               
               CustomInput(
                 controller: _priceController,
-                labelText: 'Price',
+                label: 'Price',
                 keyboardType: TextInputType.number,
-                validator: Validators.validatePrice,
+                validator: (v) => Validators.validateNumber(v, fieldName: 'Price'),
               ),
               const SizedBox(height: 16),
               
               CustomInput(
                 controller: _stockController,
-                labelText: 'Stock',
+                label: 'Stock',
                 keyboardType: TextInputType.number,
-                validator: Validators.validateStock,
+                validator: (v) => Validators.validateNumber(v, fieldName: 'Stock'),
               ),
               const SizedBox(height: 16),
               
-              // Category Dropdown
+              // Category Dropdown - Fixed label issue
               InputDecorator(
                 decoration: InputDecoration(
-                  labelText: 'Category',
+                  labelText: 'Category', // Changed from 'label' to 'labelText'
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -214,7 +224,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               // Description
               CustomInput(
                 controller: _descriptionController,
-                labelText: 'Description',
+                label: 'Description',
                 maxLines: 4,
                 validator: (value) => Validators.validateRequired(value, 'Description'),
               ),

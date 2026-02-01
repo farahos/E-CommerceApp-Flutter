@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/category_provider.dart';
-import '../../../widgets/common/custom_input.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../models/category_model.dart';
-import '../../../core/utils/validators.dart';
+import 'package:ecommerce_app/models/category_model.dart';
+import 'package:ecommerce_app/providers/category_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   const AddCategoryScreen({super.key});
@@ -96,7 +96,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         controller: _nameController,
                         label: 'Category Name',
                         hint: 'Enter category name (e.g., Electronics, Clothing)',
-                        prefixIcon: Icons.category,
+                        prefixIcon: Icon(Icons.category),
                         validator: (value) => Validators.validateRequired(value, 'Category name'),
                       ),
                       
@@ -106,27 +106,30 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         controller: _descriptionController,
                         label: 'Description',
                         hint: 'Enter category description',
-                        prefixIcon: Icons.description,
+                        prefixIcon: Icon(Icons.description),
                         maxLines: 4,
                         validator: (value) => Validators.validateRequired(value, 'Description'),
                       ),
                       
                       const SizedBox(height: 24),
                       
-                      Consumer<CategoryProvider>(
-                        builder: (context, categoryProvider, _) {
-                          if (categoryProvider.isLoading) {
-                            return const Center(child: Loader());
-                          }
-                          
-                          return CustomButton(
-                            onPressed: _saveCategory,
-                            text: 'Save Category',
-                            variant: ButtonVariant.primary,
-                            icon: Icons.save,
-                          );
-                        },
-                      ),
+                     Consumer<CategoryProvider>(
+  builder: (context, categoryProvider, _) {
+    if (categoryProvider.isLoading) {
+      return const Center(
+        child: Loader(),
+      );
+    }
+
+    return CustomButton(
+      onPressed: _saveCategory,
+      text: 'Save Category',
+      variant: ButtonVariant.primary,
+      icon: Icons.save,
+    );
+  },
+),
+
                     ],
                   ),
                 ),

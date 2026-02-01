@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../models/product_model.dart';
-import '../../core/constants/app_colors.dart';
-
+import 'package:ecommerce_app/models/product_model.dart';
+import 'package:ecommerce_app/core/constants/app_colors.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onTap;

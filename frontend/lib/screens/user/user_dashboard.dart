@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import 'home/home_screen.dart';
-import 'cart/cart_screen.dart';
-import 'orders/my_orders_screen.dart';
-import 'profile/user_profile_screen.dart';
-import '../../widgets/layout/user_bottom_nav.dart';
-
+import 'package:ecommerce_app/widgets/layout/user_bottom_nav.dart';
+import 'package:ecommerce_app/screens/user/home/home_screen.dart';
+import 'package:ecommerce_app/screens/user/cart/cart_screen.dart';
+import 'package:ecommerce_app/screens/user/orders/my_orders_screen.dart';
+import 'package:ecommerce_app/screens/user/profile/user_profile_screen.dart';
+import 'package:ecommerce_app/core/constants/app_strings.dart';
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
 
@@ -28,10 +27,11 @@ class _UserDashboardState extends State<UserDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: _getAppBarTitle(),
-        actions: _getAppBarActions(),
-      ),
+     appBar: AppBar(
+  title: Text(_getAppBarTitle()),
+  actions: _getAppBarActions(),
+),
+
       body: _screens[_currentIndex],
       bottomNavigationBar: UserBottomNav(
         currentIndex: _currentIndex,

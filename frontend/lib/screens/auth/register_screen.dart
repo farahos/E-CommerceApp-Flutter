@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/common/custom_input.dart';
-import '../../widgets/common/custom_button.dart';
-import '../../widgets/common/loader.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/utils/validators.dart';
-
+import 'package:ecommerce_app/providers/auth_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:go_router/go_router.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -45,9 +44,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         if (authProvider.isAuthenticated) {
           if (authProvider.isAdmin) {
-            Navigator.pushReplacementNamed(context, '/admin/dashboard');
+            context.go('/admin/dashboard');
           } else {
-            Navigator.pushReplacementNamed(context, '/user/dashboard');
+            context.go('/user/dashboard');
           }
         }
       } catch (e) {
@@ -85,14 +84,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Dhis Account',
+                      'Create Account',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Dhis account cusub si aad ugu shaqayso',
+                      'Join us by creating a new account',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -110,9 +109,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       CustomInput(
                         controller: _usernameController,
-                        label: 'Magaca Isticmaalaha',
-                        hint: 'Geli magacaaga',
-                        prefixIcon: Icons.person_outline,
+                        label: 'Username',
+                        hint: 'Choose a username',
+                        prefixIcon: Icon(Icons.person_outline),
                         validator: Validators.validateUsername,
                       ),
                       
@@ -121,8 +120,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomInput(
                         controller: _emailController,
                         label: 'Email',
-                        hint: 'you@example.com',
-                        prefixIcon: Icons.email_outlined,
+                        hint: 'SooQado@gmail.com',
+                        prefixIcon: Icon(Icons.email_outlined),
                         keyboardType: TextInputType.emailAddress,
                         validator: Validators.validateEmail,
                       ),
@@ -132,8 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomInput(
                         controller: _passwordController,
                         label: 'Password',
-                        hint: 'Geli password-kaaga',
-                        prefixIcon: Icons.lock_outline,
+                        hint: 'Enter your password',
+                        prefixIcon: Icon(Icons.lock_outline),
                         obscureText: _obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -154,9 +153,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       
                       CustomInput(
                         controller: _confirmPasswordController,
-                        label: 'Ku Celiyo Password',
-                        hint: 'Ku celi password-ka kor',
-                        prefixIcon: Icons.lock_outline,
+                        label: 'Confirm Password',
+                        hint: 'Confirm your password',
+                        prefixIcon: Icon(Icons.lock_outline),
                         obscureText: _obscureConfirmPassword,
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -181,12 +180,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, _) {
                           if (authProvider.isLoading) {
-                            return const Center(child: Loader());
+                           return  Center(child: Loader());
                           }
                           
                           return CustomButton(
                             onPressed: _register,
-                            text: 'Dhis Account',
+                            text: 'Register',
                             variant: ButtonVariant.primary,
                           );
                         },
@@ -198,13 +197,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Hadda account leedahay?',
+                            'Are you already registered?',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            },
+                              context.go('/login');},
                             child: const Text('Login'),
                           ),
                         ],

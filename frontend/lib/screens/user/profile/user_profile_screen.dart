@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/confirm_dialog.dart';
-
+import 'package:ecommerce_app/providers/auth_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/confirm_dialog.dart';
+import 'package:go_router/go_router.dart';
 class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({super.key});
 
@@ -18,7 +18,7 @@ class UserProfileScreen extends StatelessWidget {
 
     if (confirmed == true) {
       await Provider.of<AuthProvider>(context, listen: false).logout();
-      Navigator.pushReplacementNamed(context, '/login');
+      context.go('/login');
     }
   }
 

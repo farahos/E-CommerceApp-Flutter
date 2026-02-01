@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/product_provider.dart';
-import '../../../providers/category_provider.dart';
-import '../../../providers/cart_provider.dart';
-import '../../../widgets/product/product_card.dart';
-import '../../../widgets/common/custom_input.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../core/constants/app_strings.dart';
-
+import 'package:ecommerce_app/providers/product_provider.dart';
+import 'package:ecommerce_app/providers/category_provider.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:ecommerce_app/widgets/product/product_card.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/core/constants/app_strings.dart';
+import 'package:go_router/go_router.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -43,13 +43,13 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {
-              Navigator.pushNamed(context, '/user/cart');
+              context.go('/user/cart');
             },
           ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () {
-              Navigator.pushNamed(context, '/user/profile');
+              context.go('/user/profile');
             },
           ),
         ],
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: CustomInput(
                   controller: _searchController,
                   hint: 'Search products...',
-                  prefixIcon: Icons.search,
+                  prefixIcon: Icon(Icons.search),
                   onChanged: (value) {
                     Provider.of<ProductProvider>(context, listen: false)
                         .searchProducts(value);
@@ -200,10 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return ProductCard(
                           product: product,
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/user/product/${product.id}',
-                            );
+                            context.go('/user/product/${product.id}');
                           },
                           onAddToCart: () {
                             Provider.of<CartProvider>(context, listen: false)

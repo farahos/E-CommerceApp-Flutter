@@ -42,13 +42,13 @@ export const registerUser = async (req, res) => {
 // /**  LOGIN  **/
 export const loginUser = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ username: username }).select(
+    const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+password"
     );
     if (!user) {
-      return res.status(400).json({ message: "Username does not exist" });
+      return res.status(400).json({ message: "Email does not exist" });
     }
     // Note: status field removed - all users are active by default
 

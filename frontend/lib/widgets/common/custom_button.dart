@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:ecommerce_app/core/constants/app_colors.dart';
 
 enum ButtonVariant { primary, secondary, outline, text, danger }
 
 class CustomButton extends StatelessWidget {
-  final VoidCallback onPressed;
+final VoidCallback? onPressed;
   final String text;
   final ButtonVariant variant;
   final bool isLoading;

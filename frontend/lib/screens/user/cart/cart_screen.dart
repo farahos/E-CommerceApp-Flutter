@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/cart_provider.dart';
-import '../../../providers/order_provider.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:ecommerce_app/providers/order_provider.dart';
+import 'package:ecommerce_app/widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/widgets/common/loader.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -116,7 +116,7 @@ class _CartScreenState extends State<CartScreen> {
       body: Consumer<CartProvider>(
         builder: (context, cartProvider, _) {
           if (cartProvider.isLoading) {
-            return const Center(child: Loader());
+            return Center(child: Loader());
           }
 
           if (cartProvider.cartItems.isEmpty) {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../widgets/common/custom_input.dart';
-import '../../../widgets/common/custom_button.dart';
-import '../../../widgets/common/loader.dart';
-import '../../../widgets/common/confirm_dialog.dart';
-import '../../../core/utils/validators.dart';
+import 'package:ecommerce_app/providers/auth_provider.dart';
+import 'package:ecommerce_app/widgets/common/custom_button.dart';
+import 'package:ecommerce_app/widgets/common/custom_input.dart';
+import 'package:ecommerce_app/widgets/common/confirm_dialog.dart';
+import 'package:ecommerce_app/core/utils/validators.dart';
+import 'package:ecommerce_app/core/utils/helpers.dart';
+
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -212,7 +213,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                           controller: _usernameController,
                           label: 'Username',
                           hint: 'Enter your username',
-                          prefixIcon: Icons.person,
+                          prefixIcon: Icon(Icons.person),
                           validator: (value) => Validators.validateRequired(value, 'Username'),
                         ),
                         
@@ -222,7 +223,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                           controller: _emailController,
                           label: 'Email',
                           hint: 'Enter your email',
-                          prefixIcon: Icons.email,
+                          prefixIcon: Icon(Icons.email),
                           validator: Validators.validateEmail,
                         ),
                         
@@ -278,7 +279,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                         controller: _currentPasswordController,
                         label: 'Current Password',
                         hint: 'Enter current password',
-                        prefixIcon: Icons.lock,
+                        prefixIcon: Icon(Icons.lock),
                         obscureText: true,
                         validator: (value) => Validators.validateRequired(value, 'Current password'),
                       ),
@@ -289,7 +290,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                         controller: _newPasswordController,
                         label: 'New Password',
                         hint: 'Enter new password',
-                        prefixIcon: Icons.lock,
+                        prefixIcon: Icon(Icons.lock),
                         obscureText: true,
                         validator: Validators.validatePassword,
                       ),
@@ -300,7 +301,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                         controller: _confirmPasswordController,
                         label: 'Confirm New Password',
                         hint: 'Confirm new password',
-                        prefixIcon: Icons.lock,
+                        prefixIcon: Icon(Icons.lock),
                         obscureText: true,
                         validator: (value) => Validators.validateConfirmPassword(
                           _newPasswordController.text,

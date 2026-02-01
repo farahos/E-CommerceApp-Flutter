@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:ecommerce_app/providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,21 +20,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _init() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    // Wait a bit for smooth transition
+
     await Future.delayed(const Duration(milliseconds: 500));
-    
-    // Check if user is already logged in
     await authProvider.autoLogin();
-    
+
+    if (!mounted) return;
+
     if (authProvider.isAuthenticated) {
       if (authProvider.isAdmin) {
-        Navigator.pushReplacementNamed(context, '/admin/dashboard');
+        context.go('/admin/dashboard');
       } else {
-        Navigator.pushReplacementNamed(context, '/user/dashboard');
+        context.go('/user/dashboard');
       }
     } else {
-      Navigator.pushReplacementNamed(context, '/login');
+      context.go('/login');
     }
   }
 
@@ -44,17 +45,13 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo
-            Icon(
+            const Icon(
               Icons.shopping_cart,
               size: 80,
               color: Colors.white,
             ),
-            
             const SizedBox(height: 24),
-            
-            // App Name
-            Text(
+            const Text(
               'E-Commerce',
               style: TextStyle(
                 fontSize: 32,
@@ -62,17 +59,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             ),
-            
             const SizedBox(height: 48),
-            
-            // Loading Indicator
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
-            
+            const CircularProgressIndicator(color: Colors.white),
             const SizedBox(height: 24),
-            
-            // Loading Text
             Text(
               'Loading...',
               style: TextStyle(
