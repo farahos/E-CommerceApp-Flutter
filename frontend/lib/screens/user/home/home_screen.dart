@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/models/product_model.dart';
 import 'package:your_app/providers/product_provider.dart';
 import 'package:your_app/providers/category_provider.dart';
 import 'package:your_app/widgets/product/product_card.dart';
 import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/core/constants/app_strings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.appName),
+        title: const Text('E-Commerce App'),
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart),
@@ -79,10 +77,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
-              onChanged: (value) {
-                productProvider.searchProducts(value);
-              },
+              onChanged: productProvider.searchProducts,
             ),
           ),
           
@@ -131,6 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           
+          const SizedBox(height: 8),
+          
           // Products Grid
           Expanded(
             child: productProvider.isLoading
@@ -173,28 +175,31 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           )
-                        : GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.7,
+                        : RefreshIndicator(
+                            onRefresh: _loadData,
+                            child: GridView.builder(
+                              padding: const EdgeInsets.all(16),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.7,
+                              ),
+                              itemCount: productProvider.products.length,
+                              itemBuilder: (context, index) {
+                                final product = productProvider.products[index];
+                                return ProductCard(
+                                  product: product,
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/product/details',
+                                      arguments: product.id,
+                                    );
+                                  },
+                                );
+                              },
                             ),
-                            itemCount: productProvider.products.length,
-                            itemBuilder: (context, index) {
-                              final product = productProvider.products[index];
-                              return ProductCard(
-                                product: product,
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/product/details',
-                                    arguments: product.id,
-                                  );
-                                },
-                              );
-                            },
                           ),
           ),
         ],

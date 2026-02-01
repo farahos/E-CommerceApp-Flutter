@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:your_app/screens/auth/login_screen.dart';
-import 'package:your_app/screens/auth/register_screen.dart';
-import 'package:your_app/screens/auth/splash_screen.dart';
-import 'package:your_app/screens/admin/admin_dashboard.dart';
-import 'package:your_app/screens/admin/products/admin_products_screen.dart';
-import 'package:your_app/screens/admin/products/add_product_screen.dart';
-import 'package:your_app/screens/admin/products/edit_product_screen.dart';
-import 'package:your_app/screens/admin/categories/admin_categories_screen.dart';
-import 'package:your_app/screens/admin/orders/admin_orders_screen.dart';
-import 'package:your_app/screens/admin/profile/admin_profile_screen.dart';
-import 'package:your_app/screens/user/user_dashboard.dart';
-import 'package:your_app/screens/user/home/home_screen.dart';
-import 'package:your_app/screens/user/products/product_details_screen.dart';
-import 'package:your_app/screens/user/cart/cart_screen.dart';
-import 'package:your_app/screens/user/orders/my_orders_screen.dart';
-import 'package:your_app/screens/user/profile/user_profile_screen.dart';
+import 'package:e_commerce_app/screens/auth/login_screen.dart';
+import 'package:e-commerce_app/screens/auth/register_screen.dart';
+import 'package:e-commerce_app/screens/auth/splash_screen.dart';
+import 'package:e-commerce_app/screens/admin/admin_dashboard.dart';
+import 'package:e-commerce_app/screens/admin/products/admin_products_screen.dart';
+import 'package:e-commerce_app/screens/admin/products/add_product_screen.dart';
+import 'package:e-commerce_app/screens/admin/products/edit_product_screen.dart';
+import 'package:e-commerce_app/screens/admin/categories/admin_categories_screen.dart';
+import 'package:e-commerce_app/screens/admin/orders/admin_orders_screen.dart';
+import 'package:e-commerce_app/screens/admin/profile/admin_profile_screen.dart';
+import 'package:e-commerce_app/screens/user/user_dashboard.dart';
+import 'package:e-commerce_app/screens/user/home/home_screen.dart';
+import 'package:e-commerce_app/screens/user/products/product_details_screen.dart';
+import 'package:e-commerce_app/screens/user/cart/cart_screen.dart';
+import 'package:e-commerce_app/screens/user/orders/my_orders_screen.dart';
+import 'package:e-commerce_app/screens/user/profile/user_profile_screen.dart';
 
 class AppRoutes {
   // Route names
