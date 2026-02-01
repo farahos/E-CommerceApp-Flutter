@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/models/product_model.dart';
-import 'package:your_app/providers/product_provider.dart';
-import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/widgets/common/confirm_dialog.dart';
-import 'package:your_app/core/constants/app_strings.dart';
+import 'package:e_commerce_app/models/product_model.dart';
+import 'package:e_commerce_app/providers/product_provider.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/widgets/common/confirm_dialog.dart';
+import 'package:e_commerce_app/core/constants/app_strings.dart';
 
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});

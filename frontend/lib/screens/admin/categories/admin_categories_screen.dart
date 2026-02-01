@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/category_provider.dart';
-import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/widgets/common/confirm_dialog.dart';
+import 'package:e_commerce_app/providers/category_provider.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/widgets/common/confirm_dialog.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});

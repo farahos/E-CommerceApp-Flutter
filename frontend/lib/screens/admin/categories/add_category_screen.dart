@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/category_provider.dart';
-import 'package:your_app/widgets/common/custom_button.dart';
-import 'package:your_app/widgets/common/custom_input.dart';
-import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/core/utils/validators.dart';
-import 'package:your_app/core/utils/enums.dart';
+import 'package:e_commerce_app/providers/category_provider.dart';
+import 'package:e_commerce_app/widgets/common/custom_button.dart';
+import 'package:e_commerce_app/widgets/common/custom_input.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/core/utils/validators.dart';
+import 'package:e_commerce_app/core/utils/enums.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   const AddCategoryScreen({super.key});

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:your_app/core/constants/api_constants.dart';
-import 'package:your_app/core/utils/helpers.dart';
+import 'package:e_commerce_app/core/constants/api_constants.dart';
+import 'package:e_commerce_app/core/utils/helpers.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();

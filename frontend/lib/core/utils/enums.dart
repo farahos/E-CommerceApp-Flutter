@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:your_app/core/constants/app_colors.dart';
+import 'package:e_commerce_app/core/constants/app_colors.dart';
 
 class AppTheme {
   // Light Theme

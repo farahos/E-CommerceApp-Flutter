@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/widgets/layout/user_bottom_nav.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/widgets/layout/user_bottom_nav.dart';
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});

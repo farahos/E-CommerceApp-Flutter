@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/cart_provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/widgets/common/custom_button.dart';
-import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/widgets/common/confirm_dialog.dart';
+import 'package:e_commerce_app/providers/cart_provider.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/widgets/common/custom_button.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/widgets/common/confirm_dialog.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

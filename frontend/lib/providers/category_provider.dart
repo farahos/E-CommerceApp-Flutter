@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:your_app/core/services/api_service.dart';
-import 'package:your_app/models/category_model.dart';
+import 'package:e_commerce_app/core/services/api_service.dart';
+import 'package:e_commerce_app/models/category_model.dart';
 
 class CategoryProvider with ChangeNotifier {
   List<CategoryModel> _categories = [];

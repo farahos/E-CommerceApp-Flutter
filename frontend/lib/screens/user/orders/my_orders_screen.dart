@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/order_provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/widgets/common/loader.dart';
-import 'package:your_app/core/utils/enums.dart';
+import 'package:e_commerce_app/providers/order_provider.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/core/utils/enums.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});

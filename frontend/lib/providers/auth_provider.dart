@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:e-commerce_app/core/services/api_service.dart';
-import 'package:e-commerce_app/core/services/storage_service.dart';
-import 'package:e-commerce_app/models/user_model.dart';
+import 'package:e_commerce_app/core/services/api_service.dart';
+import 'package:e_commerce_app/core/services/storage_service.dart';
+import 'package:e_commerce_app/models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
   UserModel? _user;

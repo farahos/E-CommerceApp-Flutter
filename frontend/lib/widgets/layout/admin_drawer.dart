@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/core/utils/enums.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/core/utils/enums.dart';
 
 class AdminDrawer extends StatelessWidget {
   final AdminScreen currentScreen;

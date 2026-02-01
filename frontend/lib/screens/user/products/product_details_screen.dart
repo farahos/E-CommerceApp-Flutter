@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:your_app/providers/product_provider.dart';
-import 'package:your_app/providers/cart_provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/widgets/common/custom_button.dart';
-import 'package:your_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/providers/product_provider.dart';
+import 'package:e_commerce_app/providers/cart_provider.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/widgets/common/custom_button.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final String productId;

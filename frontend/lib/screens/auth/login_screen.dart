@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/core/constants/app_strings.dart';
-import 'package:your_app/core/utils/validators.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/widgets/common/custom_button.dart';
-import 'package:your_app/widgets/common/custom_input.dart';
-import 'package:your_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/core/constants/app_strings.dart';
+import 'package:e_commerce_app/core/utils/validators.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/widgets/common/custom_button.dart';
+import 'package:e_commerce_app/widgets/common/custom_input.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/auth_provider.dart';
-import 'package:your_app/providers/product_provider.dart';
-import 'package:your_app/providers/category_provider.dart';
-import 'package:your_app/providers/cart_provider.dart';
-import 'package:your_app/providers/order_provider.dart';
-import 'package:your_app/routes/app_routes.dart';
-import 'package:your_app/core/theme/app_theme.dart';
-import 'package:your_app/screens/auth/splash_screen.dart';
+import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/providers/product_provider.dart';
+import 'package:e_commerce_app/providers/category_provider.dart';
+import 'package:e_commerce_app/providers/cart_provider.dart';
+import 'package:e_commerce_app/providers/order_provider.dart';
+import 'package:e_commerce_app/routes/app_routes.dart';
+import 'package:e_commerce_app/core/theme/app_theme.dart';
+import 'package:e_commerce_app/screens/auth/splash_screen.dart';
 import 'package:flutter/services.dart';
 
 void main() {

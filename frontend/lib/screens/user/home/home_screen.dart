@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:your_app/providers/product_provider.dart';
-import 'package:your_app/providers/category_provider.dart';
-import 'package:your_app/widgets/product/product_card.dart';
-import 'package:your_app/widgets/common/loader.dart';
+import 'package:e_commerce_app/providers/product_provider.dart';
+import 'package:e_commerce_app/providers/category_provider.dart';
+import 'package:e_commerce_app/widgets/product/product_card.dart';
+import 'package:e_commerce_app/widgets/common/loader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

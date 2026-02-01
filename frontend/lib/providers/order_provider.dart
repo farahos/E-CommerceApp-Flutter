@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:e-commerce_app/core/services/api_service.dart';
-import 'package:e-commerce_app/core/services/storage_service.dart';
-import 'package:e-commerce_app/models/cart_item_model.dart';
-import 'package:e-commerce_app/models/product_model.dart';
-import 'package:e-commerce_app/providers/product_provider.dart';
+import 'package:e_commerce_app/core/services/api_service.dart';
+import 'package:e_commerce_app/core/services/storage_service.dart';
+import 'package:e_commerce_app/models/cart_item_model.dart';
+import 'package:e_commerce_app/models/product_model.dart';
+import 'package:e_commerce_app/providers/product_provider.dart';
 class CartProvider with ChangeNotifier {
   List<CartItemModel> _cartItems = [];
   bool _isLoading = false;
