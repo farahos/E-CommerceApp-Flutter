@@ -25,16 +25,17 @@ class ConfirmDialog extends StatelessWidget {
       content: Text(message),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () => Navigator.of(context).pop(false),
           style: TextButton.styleFrom(
             foregroundColor: cancelColor,
           ),
           child: Text(cancelText),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: TextButton.styleFrom(
-            foregroundColor: confirmColor,
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: confirmColor,
+            foregroundColor: Colors.white,
           ),
           child: Text(confirmText),
         ),

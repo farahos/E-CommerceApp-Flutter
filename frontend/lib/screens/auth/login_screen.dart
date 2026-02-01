@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:e_commerce_app/core/constants/app_strings.dart';
-import 'package:e_commerce_app/core/utils/validators.dart';
-import 'package:e_commerce_app/providers/auth_provider.dart';
-import 'package:e_commerce_app/widgets/common/custom_button.dart';
-import 'package:e_commerce_app/widgets/common/custom_input.dart';
-import 'package:e_commerce_app/widgets/common/loader.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/common/custom_input.dart';
+import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/loader.dart';
+import '../../core/constants/app_strings.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,26 +26,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      
+      try {
+        await authProvider.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
-      if (success && context.mounted) {
-        final user = authProvider.user;
-        if (user?.role == 'admin') {
-          Navigator.pushReplacementNamed(context, '/admin/dashboard');
-        } else {
-          Navigator.pushReplacementNamed(context, '/user/dashboard');
+        if (authProvider.isAuthenticated) {
+          if (authProvider.isAdmin) {
+            Navigator.pushReplacementNamed(context, '/admin/dashboard');
+          } else {
+            Navigator.pushReplacementNamed(context, '/user/dashboard');
+          }
         }
-        
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppStrings.loginSuccess),
-            backgroundColor: Colors.green,
+            content: Text(authProvider.error),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -55,140 +56,150 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 60),
-              // Logo/Title
-              const Text(
-                AppStrings.appName,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Welcome back!',
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-              
-              // Login Form
-              Form(
-                key: _formKey,
-                child: Column(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height - 48,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo/Header
+                Column(
                   children: [
-                    CustomInput(
-                      controller: _emailController,
-                      labelText: AppStrings.email,
-                      prefixIcon: Icons.email,
-                      validator: (value) => Validators.validateEmail(value),
-                      keyboardType: TextInputType.emailAddress,
+                    Icon(
+                      Icons.shopping_cart,
+                      size: 64,
+                      color: Theme.of(context).primaryColor,
                     ),
                     const SizedBox(height: 16),
-                    CustomInput(
-                      controller: _passwordController,
-                      labelText: AppStrings.password,
-                      prefixIcon: Icons.lock,
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                    Text(
+                      AppStrings.appName,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      validator: (value) => Validators.validatePassword(value),
                     ),
                     const SizedBox(height: 8),
-                    
-                    // Error message
-                    if (authProvider.error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          authProvider.error!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // TODO: Navigate to forgot password screen
-                        },
-                        child: const Text(AppStrings.forgotPassword),
+                    Text(
+                      AppStrings.appTagline,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    
-                    // Login Button
-                    if (authProvider.isLoading)
-                      const Loader()
-                    else
-                      CustomButton(
-                        text: AppStrings.login,
-                        onPressed: _handleLogin,
-                      ),
                   ],
                 ),
-              ),
-              
-              const SizedBox(height: 30),
-              
-              // Divider
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Or',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                
+                const SizedBox(height: 48),
+                
+                // Login Form
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CustomInput(
+                        controller: _emailController,
+                        label: AppStrings.email,
+                        hint: 'you@example.com',
+                        prefixIcon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return AppStrings.requiredField;
+                          }
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value)) {
+                            return AppStrings.invalidEmail;
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      CustomInput(
+                        controller: _passwordController,
+                        label: AppStrings.password,
+                        hint: 'Enter your password',
+                        prefixIcon: Icons.lock_outline,
+                        obscureText: _obscurePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return AppStrings.requiredField;
+                          }
+                          if (value.length < 6) {
+                            return AppStrings.passwordTooShort;
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/forgot-password');
+                          },
+                          child: Text(AppStrings.forgotPassword),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, _) {
+                          if (authProvider.isLoading) {
+                            return const Center(child: Loader());
+                          }
+                          
+                          return CustomButton(
+                            onPressed: _login,
+                            text: AppStrings.login,
+                            variant: ButtonVariant.primary,
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppStrings.noAccount,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/register');
+                            },
+                            child: Text(AppStrings.register),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                ],
-              ),
-              
-              const SizedBox(height: 30),
-              
-              // Register link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppStrings.noAccount,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                    child: const Text(
-                      AppStrings.register,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

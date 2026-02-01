@@ -1,15 +1,16 @@
 class Validators {
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return 'Email ayaa lagama maarmaan ah';
     }
     
     final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+      caseSensitive: false,
     );
     
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email';
+      return 'Fadlan geli email sax ah';
     }
     
     return null;
@@ -17,35 +18,23 @@ class Validators {
 
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Password is required';
+      return 'Password ayaa lagama maarmaan ah';
     }
     
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return 'Password-ku waa inuu ka kooban yahay 6 xaraf ama ka badan';
     }
     
     return null;
   }
 
-  static String? validateConfirmPassword(String? value, String? password) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+  static String? validateConfirmPassword(String? password, String? confirmPassword) {
+    if (confirmPassword == null || confirmPassword.isEmpty) {
+      return 'Fadlan ku celi password-ka';
     }
     
-    if (value != password) {
-      return 'Passwords do not match';
-    }
-    
-    return null;
-  }
-
-  static String? validateUsername(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Username is required';
-    }
-    
-    if (value.length < 3) {
-      return 'Username must be at least 3 characters';
+    if (password != confirmPassword) {
+      return 'Password-yaadu ma isku mid yihiin';
     }
     
     return null;
@@ -53,33 +42,49 @@ class Validators {
 
   static String? validateRequired(String? value, String fieldName) {
     if (value == null || value.isEmpty) {
-      return '$fieldName is required';
+      return '$fieldName ayaa lagama maarmaan ah';
     }
     
     return null;
   }
 
-  static String? validatePrice(String? value) {
+  static String? validateNumber(String? value, {String fieldName = 'Tiro'}) {
     if (value == null || value.isEmpty) {
-      return 'Price is required';
+      return '$fieldName ayaa lagama maarmaan ah';
     }
     
-    final price = double.tryParse(value);
-    if (price == null || price <= 0) {
-      return 'Please enter a valid price';
+    final parsed = double.tryParse(value);
+    if (parsed == null) {
+      return 'Fadlan geli tiro sax ah';
+    }
+    
+    if (parsed < 0) {
+      return '$fieldName kama yaraan 0';
     }
     
     return null;
   }
 
-  static String? validateStock(String? value) {
+  static String? validateUsername(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Stock is required';
+      return 'Magaca isticmaalaha waa lagama maarmaan';
     }
     
-    final stock = int.tryParse(value);
-    if (stock == null || stock < 0) {
-      return 'Please enter a valid stock quantity';
+    if (value.length < 3) {
+      return 'Magaca isticmaalaha waa inuu ka kooban yahay 3 xaraf ama ka badan';
+    }
+    
+    return null;
+  }
+
+  static String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Telefoonka ayaa lagama maarmaan ah';
+    }
+    
+    final phoneRegex = RegExp(r'^[0-9+]{8,15}$');
+    if (!phoneRegex.hasMatch(value)) {
+      return 'Fadlan geli lambar telefoon sax ah';
     }
     
     return null;

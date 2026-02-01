@@ -1,145 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:e_commerce_app/core/services/api_service.dart';
-import 'package:e_commerce_app/core/services/storage_service.dart';
-import 'package:e_commerce_app/models/cart_item_model.dart';
-import 'package:e_commerce_app/models/product_model.dart';
-import 'package:e_commerce_app/providers/product_provider.dart';
-class CartProvider with ChangeNotifier {
-  List<CartItemModel> _cartItems = [];
+import '../core/services/api_service.dart';
+import '../models/order_model.dart';
+import '../core/constants/api_constants.dart';
+import 'storage_service.dart';
+
+class OrderProvider with ChangeNotifier {
+  List<OrderModel> _orders = [];
+  List<OrderModel> _adminOrders = [];
+  OrderModel? _selectedOrder;
   bool _isLoading = false;
-  String? _error;
+  String _error = '';
+  String _filterStatus = 'all';
 
-  List<CartItemModel> get cartItems => _cartItems;
+  List<OrderModel> get orders => _orders;
+  List<OrderModel> get adminOrders => _adminOrders;
+  OrderModel? get selectedOrder => _selectedOrder;
   bool get isLoading => _isLoading;
-  String? get error => _error;
-  int get itemCount => _cartItems.length;
-  double get totalAmount {
-    return _cartItems.fold(0, (total, item) => total + item.totalPrice);
-  }
+  String get error => _error;
+  String get filterStatus => _filterStatus;
 
-  // Load cart from server
-  Future<void> loadCart(String userId) async {
+  Future<void> fetchUserOrders() async {
     try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User ma login ahayn');
+
       _isLoading = true;
-      _error = null;
+      _error = '';
       notifyListeners();
 
-      final response = await ApiService().getCart(userId);
+      final response = await ApiService.get(ApiConstants.userOrders(userId));
       
-      if (response['success'] == true) {
-        final items = response['data']['items'] ?? [];
-        final productProvider = ProductProvider();
-        await productProvider.fetchProducts();
-        
-        _cartItems = [];
-        for (var item in items) {
-          final product = productProvider.products.firstWhere(
-            (p) => p.id == item['productId'],
-            orElse: () => ProductModel(
-              id: '',
-              name: '',
-              price: 0,
-              stock: 0,
-              description: '',
-              images: [],
-              categoryId: '',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
-          
-          if (product.id.isNotEmpty) {
-            _cartItems.add(CartItemModel.fromJson(item, product));
-          }
-        }
-        
-        // Save locally for offline access
-        await StorageService().saveCartData(
-          _cartItems.map((item) => item.toJson()).toList(),
-        );
-      }
-    } catch (e) {
-      // Fallback to local storage
-      final localCart = await StorageService().getCartData();
-      if (localCart.isNotEmpty) {
-        // TODO: Convert local cart data to CartItemModel
-      }
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Add item to cart
-  Future<bool> addToCart(String userId, ProductModel product, int quantity) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      // Check if already in cart
-      final existingIndex = _cartItems.indexWhere((item) => item.productId == product.id);
-      
-      if (existingIndex >= 0) {
-        // Update quantity
-        final newQuantity = _cartItems[existingIndex].quantity + quantity;
-        if (newQuantity <= product.stock) {
-          await ApiService().addToCart(userId, product.id, newQuantity);
-          _cartItems[existingIndex].quantity = newQuantity;
-        } else {
-          throw Exception('Insufficient stock');
-        }
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        _orders = data.map((json) => OrderModel.fromJson(json)).toList();
+        _error = '';
       } else {
-        // Add new item
-        await ApiService().addToCart(userId, product.id, quantity);
-        _cartItems.add(CartItemModel(
-          productId: product.id,
-          productName: product.name,
-          price: product.price,
-          image: product.images.isNotEmpty ? product.images[0] : '',
-          quantity: quantity,
-          stock: product.stock,
-        ));
+        _error = 'Khalad ayaa dhacay markii la soo dejiyay dalabaadka';
       }
-      
-      // Save locally
-      await StorageService().saveCartData(
-        _cartItems.map((item) => item.toJson()).toList(),
-      );
-      
-      return true;
     } catch (e) {
       _error = e.toString();
-      return false;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Update item quantity
-  Future<bool> updateQuantity(String userId, String productId, int quantity) async {
+  Future<void> fetchAllOrders() async {
+    try {
+      _isLoading = true;
+      _error = '';
+      notifyListeners();
+
+      // Note: Your backend needs to implement GET /api/orders to get all orders
+      final response = await ApiService.get('${ApiConstants.baseUrl}/orders');
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        _adminOrders = data.map((json) => OrderModel.fromJson(json)).toList();
+        _error = '';
+      } else {
+        _error = 'Khalad ayaa dhacay markii la soo dejiyay dalabaadka';
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<OrderModel?> fetchOrderById(String id) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      final index = _cartItems.indexWhere((item) => item.productId == productId);
+      final response = await ApiService.get(ApiConstants.orderById(id));
       
-      if (index >= 0 && quantity > 0 && quantity <= _cartItems[index].stock) {
-        await ApiService().addToCart(userId, productId, quantity);
-        _cartItems[index].quantity = quantity;
-        
-        // Save locally
-        await StorageService().saveCartData(
-          _cartItems.map((item) => item.toJson()).toList(),
-        );
-        
+      if (response.statusCode == 200) {
+        _selectedOrder = OrderModel.fromJson(response.data);
+        return _selectedOrder;
+      }
+      return null;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> createOrder(List<Map<String, dynamic>> items, double totalPrice) async {
+    try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User ma login ahayn');
+
+      _isLoading = true;
+      notifyListeners();
+
+      final response = await ApiService.post(ApiConstants.orders, {
+        'userId': userId,
+        'items': items,
+        'totalPrice': totalPrice,
+        'status': 'pending',
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchUserOrders();
         return true;
-      } else if (quantity == 0) {
-        return await removeItem(userId, productId);
-      } else {
-        throw Exception('Invalid quantity');
       }
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -149,23 +119,21 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // Remove item from cart
-  Future<bool> removeItem(String userId, String productId) async {
+  Future<bool> updateOrderStatus(String orderId, String status) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // TODO: Call API to remove item
-      // await ApiService().removeFromCart(userId, productId);
-      
-      _cartItems.removeWhere((item) => item.productId == productId);
-      
-      // Save locally
-      await StorageService().saveCartData(
-        _cartItems.map((item) => item.toJson()).toList(),
+      final response = await ApiService.put(
+        ApiConstants.updateOrderStatus(orderId),
+        {'status': status},
       );
-      
-      return true;
+
+      if (response.statusCode == 200) {
+        await fetchAllOrders();
+        return true;
+      }
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -175,28 +143,49 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // Clear cart
-  Future<void> clearCart(String userId) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      // TODO: Call API to clear cart
-      // await ApiService().clearCart(userId);
-      
-      _cartItems.clear();
-      await StorageService().clearCartData();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+  List<OrderModel> getFilteredOrders() {
+    if (_filterStatus == 'all') {
+      return _orders;
     }
+    return _orders.where((order) => order.status == _filterStatus).toList();
   }
 
-  // Clear error
-  void clearError() {
-    _error = null;
+  List<OrderModel> getFilteredAdminOrders() {
+    if (_filterStatus == 'all') {
+      return _adminOrders;
+    }
+    return _adminOrders.where((order) => order.status == _filterStatus).toList();
+  }
+
+  void setFilterStatus(String status) {
+    _filterStatus = status;
     notifyListeners();
+  }
+
+  void setSelectedOrder(OrderModel? order) {
+    _selectedOrder = order;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = '';
+    notifyListeners();
+  }
+
+  Map<String, int> getOrderStats() {
+    final stats = {
+      'pending': 0,
+      'paid': 0,
+      'shipped': 0,
+      'delivered': 0,
+      'cancelled': 0,
+      'total': _adminOrders.length,
+    };
+
+    for (var order in _adminOrders) {
+      stats[order.status] = (stats[order.status] ?? 0) + 1;
+    }
+
+    return stats;
   }
 }

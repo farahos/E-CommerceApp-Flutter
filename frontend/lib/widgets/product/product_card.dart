@@ -1,64 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:e_commerce_app/models/product_model.dart';
-import 'package:e_commerce_app/core/constants/app_strings.dart';
+import '../../models/product_model.dart';
+import '../../core/constants/app_colors.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onTap;
   final VoidCallback? onAddToCart;
+  final bool showAddButton;
 
   const ProductCard({
     super.key,
     required this.product,
     required this.onTap,
     this.onAddToCart,
+    this.showAddButton = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Product Image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: product.images.isNotEmpty
-                    ? Image.network(
-                        product.images[0],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: Colors.grey,
-                              size: 48,
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Colors.grey,
-                          size: 48,
+            AspectRatio(
+              aspectRatio: 1,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Product Image
+                  product.images.isNotEmpty
+                      ? Image.network(
+                          product.images.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppColors.gray100,
+                              child: const Icon(
+                                Icons.image,
+                                size: 48,
+                                color: AppColors.gray400,
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: AppColors.gray100,
+                          child: const Icon(
+                            Icons.image,
+                            size: 48,
+                            color: AppColors.gray400,
+                          ),
+                        ),
+
+                  // Stock Indicator
+                  if (!product.isInStock)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Out of Stock',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
+                    ),
+
+                  // Favorite Button
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.white.withOpacity(0.9),
+                      child: IconButton(
+                        icon: const Icon(Icons.favorite_border, size: 16),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            
-            // Product Details
+
+            // Product Info
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -68,62 +119,65 @@ class ProductCard extends StatelessWidget {
                   Text(
                     product.name,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
+
                   const SizedBox(height: 4),
-                  
-                  // Product Price
-                  Text(
-                    '\$${product.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 4),
-                  
-                  // Stock Status
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.inventory_2_outlined,
-                        size: 14,
-                        color: product.stock > 0 ? Colors.green : Colors.red,
+
+                  // Category
+                  if (product.categoryName != null)
+                    Text(
+                      product.categoryName!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.gray500,
                       ),
-                      const SizedBox(width: 4),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                  const SizedBox(height: 8),
+
+                  // Price and Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Price
                       Text(
-                        product.stock > 0 
-                            ? '${product.stock} ${AppStrings.stock}' 
-                            : 'Out of stock',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: product.stock > 0 ? Colors.green : Colors.red,
+                        '\$${product.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.primary,
                         ),
                       ),
+
+                      // Add to Cart Button
+                      if (showAddButton && onAddToCart != null && product.isInStock)
+                        IconButton(
+                          icon: const Icon(Icons.add_shopping_cart),
+                          onPressed: onAddToCart,
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.all(8),
+                          ),
+                        ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // Add to Cart Button
-                  if (onAddToCart != null && product.stock > 0)
-                    ElevatedButton.icon(
-                      onPressed: onAddToCart,
-                      icon: const Icon(Icons.shopping_cart, size: 16),
-                      label: const Text(AppStrings.addToCart),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 36),
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
+
+                  // Stock Info
+                  Text(
+                    'Stock: ${product.stock}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.gray500,
                     ),
+                  ),
                 ],
               ),
             ),

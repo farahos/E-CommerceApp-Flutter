@@ -1,74 +1,77 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
-  static final StorageService _instance = StorageService._internal();
-  factory StorageService() => _instance;
-  StorageService._internal();
-
-  Future<SharedPreferences> get _prefs async => await SharedPreferences.getInstance();
-
-  // User data
-  Future<void> saveUserData(Map<String, dynamic> userData) async {
-    final prefs = await _prefs;
-    await prefs.setString('userId', userData['_id'] ?? '');
-    await prefs.setString('username', userData['username'] ?? '');
-    await prefs.setString('email', userData['email'] ?? '');
-    await prefs.setString('role', userData['role'] ?? 'user');
-    await prefs.setString('token', userData['token'] ?? '');
+  static late SharedPreferences _preferences;
+  
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'user_data';
+  static const String _userIdKey = 'user_id';
+  static const String _userRoleKey = 'user_role';
+  
+  static Future<void> init() async {
+    _preferences = await SharedPreferences.getInstance();
   }
-
-  Future<Map<String, dynamic>> getUserData() async {
-    final prefs = await _prefs;
-    return {
-      'userId': prefs.getString('userId') ?? '',
-      'username': prefs.getString('username') ?? '',
-      'email': prefs.getString('email') ?? '',
-      'role': prefs.getString('role') ?? 'user',
-      'token': prefs.getString('token') ?? '',
-    };
+  
+  // Token methods
+  static Future<void> setToken(String token) async {
+    await _preferences.setString(_tokenKey, token);
   }
-
-  Future<String> getToken() async {
-    final prefs = await _prefs;
-    return prefs.getString('token') ?? '';
+  
+  static String? getToken() {
+    return _preferences.getString(_tokenKey);
   }
-
-  Future<String> getUserId() async {
-    final prefs = await _prefs;
-    return prefs.getString('userId') ?? '';
+  
+  static Future<void> clearToken() async {
+    await _preferences.remove(_tokenKey);
   }
-
-  Future<String> getUserRole() async {
-    final prefs = await _prefs;
-    return prefs.getString('role') ?? 'user';
-  }
-
-  Future<void> clearUserData() async {
-    final prefs = await _prefs;
-    await prefs.remove('userId');
-    await prefs.remove('username');
-    await prefs.remove('email');
-    await prefs.remove('role');
-    await prefs.remove('token');
-  }
-
-  // Cart data (local cache)
-  Future<void> saveCartData(List<dynamic> cartItems) async {
-    final prefs = await _prefs;
-    await prefs.setString('cart', json.encode(cartItems));
-  }
-
-  Future<List<dynamic>> getCartData() async {
-    final prefs = await _prefs;
-    final cartJson = prefs.getString('cart');
-    if (cartJson != null) {
-      return json.decode(cartJson);
+  
+  // User data methods
+  static Future<void> setUserData(Map<String, dynamic> userData) async {
+    await _preferences.setString(_userKey, jsonEncode(userData));
+    if (userData['_id'] != null) {
+      await _preferences.setString(_userIdKey, userData['_id']);
     }
-    return [];
+    if (userData['role'] != null) {
+      await _preferences.setString(_userRoleKey, userData['role']);
+    }
   }
-
-  Future<void> clearCartData() async {
-    final prefs = await _prefs;
-    await prefs.remove('cart');
+  
+  static Map<String, dynamic>? getUserData() {
+    final data = _preferences.getString(_userKey);
+    if (data != null) {
+      return jsonDecode(data);
+    }
+    return null;
+  }
+  
+  static String? getUserId() {
+    return _preferences.getString(_userIdKey);
+  }
+  
+  static String? getUserRole() {
+    return _preferences.getString(_userRoleKey);
+  }
+  
+  static Future<void> clearUserData() async {
+    await _preferences.remove(_userKey);
+    await _preferences.remove(_userIdKey);
+    await _preferences.remove(_userRoleKey);
+  }
+  
+  // Clear all storage
+  static Future<void> clear() async {
+    await clearToken();
+    await clearUserData();
+  }
+  
+  // Check if user is logged in
+  static bool isLoggedIn() {
+    return getToken() != null && getUserData() != null;
+  }
+  
+  // Check if user is admin
+  static bool isAdmin() {
+    return getUserRole() == 'admin';
   }
 }

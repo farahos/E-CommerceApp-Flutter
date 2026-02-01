@@ -1,288 +1,185 @@
 import 'package:flutter/material.dart';
-import 'package:e_commerce_app/core/services/api_service.dart';
-import 'package:e_commerce_app/core/services/storage_service.dart';
-import 'package:e_commerce_app/models/cart_item_model.dart';
-import 'package:e_commerce_app/models/product_model.dart';
-import 'package:e_commerce_app/providers/product_provider.dart';
+import '../core/services/api_service.dart';
+import '../models/cart_item_model.dart';
+import '../models/product_model.dart';
+import '../core/constants/api_constants.dart';
+import 'storage_service.dart';
 
 class CartProvider with ChangeNotifier {
-  List<CartItemModel> _cartItems = [];
+  List<CartItem> _cartItems = [];
   bool _isLoading = false;
-  String? _error;
-  double _shippingFee = 5.0;
-  double _taxRate = 0.1; // 10%
+  String _error = '';
 
-  List<CartItemModel> get cartItems => _cartItems;
+  List<CartItem> get cartItems => _cartItems;
   bool get isLoading => _isLoading;
-  String? get error => _error;
+  String get error => _error;
   int get itemCount => _cartItems.length;
-  double get shippingFee => _shippingFee;
-  double get taxRate => _taxRate;
+  double get totalPrice => _cartItems.fold(0, (sum, item) => sum + item.total);
 
-  // Subtotal (price before tax and shipping)
-  double get subtotal {
-    return _cartItems.fold(0, (total, item) => total + item.totalPrice);
-  }
-
-  // Tax amount
-  double get taxAmount {
-    return subtotal * _taxRate;
-  }
-
-  // Total amount (subtotal + tax + shipping)
-  double get totalAmount {
-    return subtotal + taxAmount + _shippingFee;
-  }
-
-  // Load cart from server
-  Future<void> loadCart(String userId) async {
+  Future<void> fetchCart() async {
     try {
+      final userId = StorageService.getUserId();
+      if (userId == null) return;
+
       _isLoading = true;
-      _error = null;
+      _error = '';
       notifyListeners();
 
-      final response = await ApiService().getCart(userId);
+      final response = await ApiService.get(ApiConstants.userCart(userId));
       
-      if (response['success'] == true) {
-        final items = response['data']['items'] ?? [];
-        
-        // Fetch products to get details
-        final productProvider = ProductProvider();
-        await productProvider.fetchProducts();
-        
+      if (response.statusCode == 200) {
+        final cartData = response.data;
+        if (cartData['items'] != null) {
+          _cartItems = (cartData['items'] as List)
+              .map((item) => CartItem.fromJson(item))
+              .toList();
+        }
+      } else if (response.statusCode == 404) {
+        // Cart doesn't exist yet, create empty cart
         _cartItems = [];
-        for (var item in items) {
-          final product = productProvider.products.firstWhere(
-            (p) => p.id == item['productId'],
-            orElse: () => ProductModel(
-              id: '',
-              name: '',
-              price: 0,
-              stock: 0,
-              description: '',
-              images: [],
-              categoryId: '',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
-          
-          if (product.id.isNotEmpty) {
-            _cartItems.add(CartItemModel.fromJson(item, product));
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addToCart(ProductModel product, {int quantity = 1}) async {
+    try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User not logged in');
+
+      _isLoading = true;
+      notifyListeners();
+
+      final response = await ApiService.post(ApiConstants.cartAdd, {
+        'userId': userId,
+        'productId': product.id,
+        'qty': quantity,
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Update local cart
+        final existingIndex = _cartItems
+            .indexWhere((item) => item.productId == product.id);
+        
+        if (existingIndex >= 0) {
+          _cartItems[existingIndex].qty += quantity;
+        } else {
+          _cartItems.add(CartItem(
+            productId: product.id,
+            productName: product.name,
+            productPrice: product.price,
+            productImage: product.images.isNotEmpty ? product.images.first : null,
+            qty: quantity,
+          ));
+        }
+      }
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateCartItem(String productId, int quantity) async {
+    try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User not logged in');
+
+      _isLoading = true;
+      notifyListeners();
+
+      final response = await ApiService.put(
+        ApiConstants.cartUpdate(userId, productId),
+        {'qty': quantity},
+      );
+
+      if (response.statusCode == 200) {
+        final index = _cartItems.indexWhere((item) => item.productId == productId);
+        if (index >= 0) {
+          if (quantity <= 0) {
+            _cartItems.removeAt(index);
+          } else {
+            _cartItems[index].qty = quantity;
           }
         }
-        
-        // Save locally for offline access
-        await _saveCartLocally();
       }
     } catch (e) {
-      // Fallback to local storage
-      await _loadCartLocally();
       _error = e.toString();
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Add item to cart
-  Future<bool> addToCart(String userId, ProductModel product, int quantity) async {
+  Future<void> removeFromCart(String productId) async {
     try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User not logged in');
+
       _isLoading = true;
       notifyListeners();
 
-      // Check if already in cart
-      final existingIndex = _cartItems.indexWhere((item) => item.productId == product.id);
-      
-      if (existingIndex >= 0) {
-        // Update quantity
-        final newQuantity = _cartItems[existingIndex].quantity + quantity;
-        if (newQuantity <= product.stock) {
-          await ApiService().addToCart(userId, product.id, newQuantity);
-          _cartItems[existingIndex].quantity = newQuantity;
-        } else {
-          throw Exception('Insufficient stock. Only ${product.stock} items available.');
-        }
-      } else {
-        // Add new item
-        await ApiService().addToCart(userId, product.id, quantity);
-        _cartItems.add(CartItemModel(
-          productId: product.id,
-          productName: product.name,
-          price: product.price,
-          image: product.images.isNotEmpty ? product.images[0] : '',
-          quantity: quantity,
-          stock: product.stock,
-        ));
+      final response = await ApiService.delete(
+        ApiConstants.cartRemove(userId, productId),
+      );
+
+      if (response.statusCode == 200) {
+        _cartItems.removeWhere((item) => item.productId == productId);
       }
-      
-      // Save locally
-      await _saveCartLocally();
-      
-      return true;
     } catch (e) {
       _error = e.toString();
-      return false;
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Update item quantity
-  Future<bool> updateQuantity(String userId, String productId, int quantity) async {
+  Future<void> clearCart() async {
     try {
+      final userId = StorageService.getUserId();
+      if (userId == null) throw Exception('User not logged in');
+
       _isLoading = true;
       notifyListeners();
 
-      final index = _cartItems.indexWhere((item) => item.productId == productId);
-      
-      if (index >= 0) {
-        if (quantity > 0 && quantity <= _cartItems[index].stock) {
-          await ApiService().addToCart(userId, productId, quantity);
-          _cartItems[index].quantity = quantity;
-          
-          // Save locally
-          await _saveCartLocally();
-          
-          return true;
-        } else if (quantity == 0) {
-          return await removeItem(userId, productId);
-        } else {
-          throw Exception('Invalid quantity or insufficient stock');
-        }
-      }
-      
-      return false;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
+      final response = await ApiService.delete(
+        ApiConstants.clearCart(userId),
+      );
 
-  // Remove item from cart
-  Future<bool> removeItem(String userId, String productId) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      // Call API to remove item
-      // await ApiService().removeFromCart(userId, productId);
-      
-      _cartItems.removeWhere((item) => item.productId == productId);
-      
-      // Save locally
-      await _saveCartLocally();
-      
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Clear cart
-  Future<void> clearCart(String userId) async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      // Call API to clear cart
-      // await ApiService().clearCart(userId);
-      
-      _cartItems.clear();
-      await StorageService().clearCartData();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Save cart locally
-  Future<void> _saveCartLocally() async {
-    final cartData = _cartItems.map((item) => item.toJson()).toList();
-    await StorageService().saveCartData(cartData);
-  }
-
-  // Load cart from local storage
-  Future<void> _loadCartLocally() async {
-    try {
-      final cartData = await StorageService().getCartData();
-      if (cartData.isNotEmpty) {
-        // Convert local data to CartItemModel
-        // Note: This requires product data to be available locally
-        // For simplicity, we'll just clear local cart if can't convert
-        _cartItems = [];
+      if (response.statusCode == 200) {
+        _cartItems.clear();
       }
     } catch (e) {
-      _cartItems = [];
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  // Check if product is in cart
+  int getProductQuantity(String productId) {
+    final item = _cartItems.firstWhere(
+      (item) => item.productId == productId,
+      orElse: () => CartItem(productId: '', qty: 0),
+    );
+    return item.qty;
+  }
+
   bool isInCart(String productId) {
     return _cartItems.any((item) => item.productId == productId);
   }
 
-  // Get cart quantity for product
-  int getCartQuantity(String productId) {
-    final item = _cartItems.firstWhere(
-      (item) => item.productId == productId,
-      orElse: () => CartItemModel(
-        productId: '',
-        productName: '',
-        price: 0,
-        image: '',
-        quantity: 0,
-        stock: 0,
-      ),
-    );
-    return item.quantity;
-  }
-
-  // Update shipping fee
-  void updateShippingFee(double fee) {
-    _shippingFee = fee;
-    notifyListeners();
-  }
-
-  // Update tax rate
-  void updateTaxRate(double rate) {
-    _taxRate = rate;
-    notifyListeners();
-  }
-
-  // Clear error
   void clearError() {
-    _error = null;
+    _error = '';
     notifyListeners();
-  }
-
-  // Validate cart (check stock)
-  Map<String, dynamic> validateCart() {
-    final outOfStockItems = <CartItemModel>[];
-    final lowStockItems = <CartItemModel>[];
-    
-    for (final item in _cartItems) {
-      if (item.quantity > item.stock) {
-        outOfStockItems.add(item);
-      } else if (item.quantity == item.stock) {
-        lowStockItems.add(item);
-      }
-    }
-    
-    return {
-      'isValid': outOfStockItems.isEmpty,
-      'outOfStockItems': outOfStockItems,
-      'lowStockItems': lowStockItems,
-    };
   }
 }

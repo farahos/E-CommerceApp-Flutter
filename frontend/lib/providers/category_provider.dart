@@ -1,53 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:e_commerce_app/core/services/api_service.dart';
-import 'package:e_commerce_app/models/category_model.dart';
+import '../core/services/api_service.dart';
+import '../models/category_model.dart';
+import '../core/constants/api_constants.dart';
 
 class CategoryProvider with ChangeNotifier {
   List<CategoryModel> _categories = [];
   CategoryModel? _selectedCategory;
   bool _isLoading = false;
-  String? _error;
-  FormMode _formMode = FormMode.create;
+  String _error = '';
 
   List<CategoryModel> get categories => _categories;
   CategoryModel? get selectedCategory => _selectedCategory;
   bool get isLoading => _isLoading;
-  String? get error => _error;
-  FormMode get formMode => _formMode;
+  String get error => _error;
 
-  // Fetch all categories
   Future<void> fetchCategories() async {
     try {
       _isLoading = true;
-      _error = null;
+      _error = '';
       notifyListeners();
 
-      final response = await ApiService().getCategories();
-      _categories = List<CategoryModel>.from(
-        response.map((item) => CategoryModel.fromJson(item)),
+      final response = await ApiService.get(ApiConstants.categories);
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        _categories = data.map((json) => CategoryModel.fromJson(json)).toList();
+        _error = '';
+      } else {
+        _error = 'Khalad ayaa dhacay markii la soo dejiyay qaybaha';
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<CategoryModel?> fetchCategoryById(String id) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final response = await ApiService.get(ApiConstants.categoryById(id));
+      
+      if (response.statusCode == 200) {
+        _selectedCategory = CategoryModel.fromJson(response.data);
+        return _selectedCategory;
+      }
+      return null;
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> createCategory(CategoryModel category) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final response = await ApiService.post(
+        ApiConstants.categories,
+        category.toJson(),
       );
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 
-  // Create category
-  Future<bool> createCategory(String name, String description) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      await ApiService().createCategory({
-        'name': name,
-        'description': description,
-      });
-
-      await fetchCategories(); // Refresh list
-      return true;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchCategories();
+        return true;
+      }
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -57,20 +82,21 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  // Update category
-  Future<bool> updateCategory(String id, String name, String description) async {
+  Future<bool> updateCategory(CategoryModel category) async {
     try {
       _isLoading = true;
-      _error = null;
       notifyListeners();
 
-      await ApiService().updateCategory(id, {
-        'name': name,
-        'description': description,
-      });
+      final response = await ApiService.put(
+        ApiConstants.categoryById(category.id),
+        category.toJson(),
+      );
 
-      await fetchCategories(); // Refresh list
-      return true;
+      if (response.statusCode == 200) {
+        await fetchCategories();
+        return true;
+      }
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -80,20 +106,18 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  // Delete category
   Future<bool> deleteCategory(String id) async {
     try {
       _isLoading = true;
-      _error = null;
       notifyListeners();
 
-      await ApiService().deleteCategory(id);
-      
-      // Remove from local list
-      _categories.removeWhere((category) => category.id == id);
-      notifyListeners();
-      
-      return true;
+      final response = await ApiService.delete(ApiConstants.categoryById(id));
+
+      if (response.statusCode == 200) {
+        _categories.removeWhere((category) => category.id == id);
+        return true;
+      }
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -103,48 +127,33 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  // Select category
-  void selectCategory(CategoryModel category) {
-    _selectedCategory = category;
+  void filterByCategory(String? categoryId) {
+    _selectedCategory = categoryId != null
+        ? _categories.firstWhere((cat) => cat.id == categoryId)
+        : null;
     notifyListeners();
   }
 
-  // Clear selected category
-  void clearSelectedCategory() {
+  void clearFilters() {
     _selectedCategory = null;
     notifyListeners();
   }
 
-  // Set form mode
-  void setFormMode(FormMode mode) {
-    _formMode = mode;
-    notifyListeners();
-  }
-
-  // Clear error
-  void clearError() {
-    _error = null;
-    notifyListeners();
-  }
-
-  // Get category by ID
-  CategoryModel? getCategoryById(String id) {
+  String? getCategoryName(String categoryId) {
     try {
-      return _categories.firstWhere((category) => category.id == id);
+      return _categories.firstWhere((cat) => cat.id == categoryId).name;
     } catch (e) {
       return null;
     }
   }
 
-  // Get category name by ID
-  String getCategoryNameById(String id) {
-    final category = getCategoryById(id);
-    return category?.name ?? 'Unknown Category';
+  void setSelectedCategory(CategoryModel? category) {
+    _selectedCategory = category;
+    notifyListeners();
   }
 
-  // Check if category exists
-  bool categoryExists(String name) {
-    return _categories.any((category) => 
-        category.name.toLowerCase() == name.toLowerCase());
+  void clearError() {
+    _error = '';
+    notifyListeners();
   }
 }

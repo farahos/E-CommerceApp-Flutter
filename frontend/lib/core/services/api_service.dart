@@ -1,244 +1,148 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:e_commerce_app/core/constants/api_constants.dart';
-import 'package:e_commerce_app/core/utils/helpers.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import '../constants/api_constants.dart';
+import 'storage_service.dart';
 
 class ApiService {
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
-  ApiService._internal();
-
-  Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+  static late Dio _dio;
+  
+  static void init() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
     
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-      'Cookie': 'token=$token',
-    };
+    // Add interceptors
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        // Add auth token from cookies
+        final token = await StorageService.getToken();
+        if (token != null) {
+          options.headers['Cookie'] = 'token=$token';
+        }
+        
+        // For Flutter Web, we need to handle cookies differently
+        options.headers['credentials'] = 'include';
+        
+        if (kDebugMode) {
+          print('Request: ${options.method} ${options.path}');
+        }
+        return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        if (kDebugMode) {
+          print('Response: ${response.statusCode} ${response.requestOptions.path}');
+        }
+        return handler.next(response);
+      },
+      onError: (error, handler) async {
+        if (kDebugMode) {
+          print('Error: ${error.response?.statusCode} ${error.message}');
+        }
+        
+        // Handle token expiration
+        if (error.response?.statusCode == 401 || error.response?.statusCode == 403) {
+          await StorageService.clear();
+          // You might want to navigate to login screen here
+        }
+        
+        return handler.next(error);
+      },
+    ));
   }
-
-  Future<http.Response> _handleResponse(http.Response response) async {
-    if (response.statusCode == 401) {
-      // Token expired or invalid
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      throw Exception('Unauthorized');
-    }
-    
-    if (response.statusCode >= 400) {
-      final errorData = json.decode(response.body);
-      throw Exception(errorData['message'] ?? 'Something went wrong');
-    }
-    
-    return response;
-  }
-
-  // Auth APIs
-  Future<dynamic> login(String email, String password) async {
+  
+  // GET request
+  static Future<Response> get(String endpoint, {Map<String, dynamic>? queryParams}) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.login),
-        headers: await _getHeaders(),
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
+      return await _dio.get(
+        endpoint,
+        queryParameters: queryParams,
+        options: Options(
+          headers: {
+            'credentials': 'include',
+          },
+        ),
+      );
     } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
-
-  Future<dynamic> register(String username, String email, String password) async {
+  
+  // POST request
+  static Future<Response> post(String endpoint, dynamic data) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.register),
-        headers: await _getHeaders(),
-        body: json.encode({
-          'username': username,
-          'email': email,
-          'password': password,
-        }),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
+      return await _dio.post(
+        endpoint,
+        data: data,
+        options: Options(
+          headers: {
+            'credentials': 'include',
+          },
+        ),
+      );
     } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
-
-  // Product APIs
-  Future<List<dynamic>> getProducts() async {
+  
+  // PUT request
+  static Future<Response> put(String endpoint, dynamic data) async {
     try {
-      final response = await http.get(
-        Uri.parse(ApiConstants.products),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
+      return await _dio.put(
+        endpoint,
+        data: data,
+        options: Options(
+          headers: {
+            'credentials': 'include',
+          },
+        ),
+      );
     } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
-
-  Future<dynamic> getProductById(String id) async {
+  
+  // DELETE request
+  static Future<Response> delete(String endpoint) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.products}/$id'),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
+      return await _dio.delete(
+        endpoint,
+        options: Options(
+          headers: {
+            'credentials': 'include',
+          },
+        ),
+      );
     } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
-
-  Future<dynamic> createProduct(Map<String, dynamic> data) async {
+  
+  // Multipart request for file uploads
+  static Future<Response> multipartPost(String endpoint, FormData formData) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.products),
-        headers: await _getHeaders(),
-        body: json.encode(data),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
+      return await _dio.post(
+        endpoint,
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+          headers: {
+            'credentials': 'include',
+          },
+        ),
+      );
     } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  Future<dynamic> updateProduct(String id, Map<String, dynamic> data) async {
-    try {
-      final response = await http.put(
-        Uri.parse('${ApiConstants.products}/$id'),
-        headers: await _getHeaders(),
-        body: json.encode(data),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  Future<dynamic> deleteProduct(String id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('${ApiConstants.products}/$id'),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  // Category APIs
-  Future<List<dynamic>> getCategories() async {
-    try {
-      final response = await http.get(
-        Uri.parse(ApiConstants.categories),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  Future<dynamic> createCategory(Map<String, dynamic> data) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.categories),
-        headers: await _getHeaders(),
-        body: json.encode(data),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  // Cart APIs
-  Future<dynamic> getCart(String userId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.cart}/$userId'),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  Future<dynamic> addToCart(String userId, String productId, int quantity) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.cart}/add'),
-        headers: await _getHeaders(),
-        body: json.encode({
-          'userId': userId,
-          'productId': productId,
-          'qty': quantity,
-        }),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  // Order APIs
-  Future<List<dynamic>> getUserOrders(String userId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.orders}/user/$userId'),
-        headers: await _getHeaders(),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  Future<dynamic> createOrder(Map<String, dynamic> data) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.orders),
-        headers: await _getHeaders(),
-        body: json.encode(data),
-      ).timeout(ApiConstants.connectTimeout);
-
-      final handledResponse = await _handleResponse(response);
-      return json.decode(handledResponse.body);
-    } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
 }

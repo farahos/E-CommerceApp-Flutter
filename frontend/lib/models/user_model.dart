@@ -1,35 +1,54 @@
 class UserModel {
   final String id;
-  final String username;
   final String email;
+  final String username;
   final String role;
-  final String? token;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   UserModel({
     required this.id,
-    required this.username,
     required this.email,
+    required this.username,
     required this.role,
-    this.token,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id'] ?? '',
-      username: json['username'] ?? '',
+      id: json['_id'],
       email: json['email'] ?? '',
+      username: json['username'] ?? '',
       role: json['role'] ?? 'user',
-      token: json['token'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
-      'username': username,
       'email': email,
+      'username': username,
       'role': role,
-      if (token != null) 'token': token,
     };
+  }
+
+  UserModel copyWith({
+    String? id,
+    String? email,
+    String? username,
+    String? role,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

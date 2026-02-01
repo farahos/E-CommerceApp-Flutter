@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:e_commerce_app/providers/product_provider.dart';
-import 'package:e_commerce_app/providers/category_provider.dart';
-import 'package:e_commerce_app/widgets/common/custom_button.dart';
-import 'package:e_commerce_app/widgets/common/custom_input.dart';
-import 'package:e_commerce_app/widgets/common/loader.dart';
-import 'package:e_commerce_app/core/constants/app_strings.dart';
-import 'package:e_commerce_app/core/utils/validators.dart';
+import 'package:image_picker_web/image_picker_web.dart';
+import '../../../providers/product_provider.dart';
+import '../../../providers/category_provider.dart';
+import '../../../widgets/common/custom_input.dart';
+import '../../../widgets/common/custom_button.dart';
+import '../../../widgets/common/loader.dart';
+import '../../../models/product_model.dart';
+import '../../../core/utils/validators.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -21,70 +22,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final List<TextEditingController> _imageControllers = [TextEditingController()];
   String? _selectedCategoryId;
+  List<String> _images = [];
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
-  }
-
-  Future<void> _loadCategories() async {
-    final provider = Provider.of<CategoryProvider>(context, listen: false);
-    await provider.fetchCategories();
-  }
-
-  Future<void> _addProduct() async {
-    if (_formKey.currentState!.validate() && _selectedCategoryId != null) {
-      final productProvider = Provider.of<ProductProvider>(context, listen: false);
-      
-      final productData = {
-        'name': _nameController.text.trim(),
-        'price': double.parse(_priceController.text),
-        'stock': int.parse(_stockController.text),
-        'description': _descriptionController.text.trim(),
-        'images': _imageControllers
-            .where((controller) => controller.text.isNotEmpty)
-            .map((controller) => controller.text.trim())
-            .toList(),
-        'categoryId': _selectedCategoryId,
-      };
-
-      final success = await productProvider.createProduct(productData);
-      
-      if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Product added successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } else if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a category'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _addImageField() {
-    setState(() {
-      _imageControllers.add(TextEditingController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
     });
-  }
-
-  void _removeImageField(int index) {
-    if (_imageControllers.length > 1) {
-      setState(() {
-        _imageControllers[index].dispose();
-        _imageControllers.removeAt(index);
-      });
-    }
   }
 
   @override
@@ -93,20 +39,84 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _priceController.dispose();
     _stockController.dispose();
     _descriptionController.dispose();
-    for (final controller in _imageControllers) {
-      controller.dispose();
-    }
     super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    try {
+      final pickedImages = await ImagePickerWeb.getMultiImagesAsBytes();
+      if (pickedImages != null && pickedImages.isNotEmpty) {
+        // Convert to base64 or upload to server
+        // For now, we'll just show a message
+        setState(() {
+          _images.addAll(List.filled(pickedImages.length, ''));
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${pickedImages.length} images selected'),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking images: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveProduct() async {
+    if (_formKey.currentState!.validate()) {
+      if (_selectedCategoryId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a category'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final product = ProductModel(
+        id: '',
+        name: _nameController.text.trim(),
+        price: double.parse(_priceController.text),
+        stock: int.parse(_stockController.text),
+        description: _descriptionController.text.trim(),
+        images: _images,
+        categoryId: _selectedCategoryId!,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final success = await Provider.of<ProductProvider>(context, listen: false)
+          .createProduct(product);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Product created successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final categoryProvider = Provider.of<CategoryProvider>(context);
-    final productProvider = Provider.of<ProductProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Product'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveProduct,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -115,140 +125,222 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CustomInput(
-                controller: _nameController,
-                labelText: 'Product Name',
-                validator: (value) => Validators.validateRequired(value, 'Product name'),
-              ),
-              const SizedBox(height: 16),
-              
-              CustomInput(
-                controller: _priceController,
-                labelText: 'Price',
-                keyboardType: TextInputType.number,
-                validator: Validators.validatePrice,
-              ),
-              const SizedBox(height: 16),
-              
-              CustomInput(
-                controller: _stockController,
-                labelText: 'Stock',
-                keyboardType: TextInputType.number,
-                validator: Validators.validateStock,
-              ),
-              const SizedBox(height: 16),
-              
-              // Category Dropdown
-              InputDecorator(
-                decoration: InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
+              // Product Images
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Product Images',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (_images.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.image,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 12),
+                              const Text('No images selected'),
+                            ],
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 200,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _images.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 200,
+                                      height: 200,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey[300]!),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(Icons.image, size: 50),
+                                    ),
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: Colors.red,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close, size: 12),
+                                          onPressed: () {
+                                            setState(() {
+                                              _images.removeAt(index);
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      CustomButton(
+                        onPressed: _pickImages,
+                        text: 'Add Images',
+                        icon: Icons.add_photo_alternate,
+                        variant: ButtonVariant.outline,
+                      ),
+                    ],
                   ),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategoryId,
-                    hint: const Text('Select a category'),
-                    isExpanded: true,
-                    items: categoryProvider.categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category.id,
-                        child: Text(category.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategoryId = value;
-                      });
-                    },
-                  ),
-                ),
               ),
+              
               const SizedBox(height: 16),
               
-              // Description
-              CustomInput(
-                controller: _descriptionController,
-                labelText: 'Description',
-                maxLines: 4,
-                validator: (value) => Validators.validateRequired(value, 'Description'),
-              ),
-              const SizedBox(height: 16),
-              
-              // Image URLs
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Image URLs',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ..._imageControllers.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final controller = entry.value;
-                    
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: index == _imageControllers.length - 1 ? 0 : 8),
-                      child: Row(
+              // Product Details
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Product Details',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      CustomInput(
+                        controller: _nameController,
+                        label: 'Product Name',
+                        hint: 'Enter product name',
+                        validator: (value) => Validators.validateRequired(value, 'Product name'),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Row(
                         children: [
                           Expanded(
-                            child: TextFormField(
-                              controller: controller,
-                              decoration: InputDecoration(
-                                hintText: 'Image URL ${index + 1}',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                            child: CustomInput(
+                              controller: _priceController,
+                              label: 'Price',
+                              hint: '0.00',
+                              keyboardType: TextInputType.number,
+                              validator: (value) => Validators.validateNumber(value, fieldName: 'Price'),
                             ),
                           ),
-                          if (_imageControllers.length > 1)
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle, color: Colors.red),
-                              onPressed: () => _removeImageField(index),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: CustomInput(
+                              controller: _stockController,
+                              label: 'Stock',
+                              hint: '0',
+                              keyboardType: TextInputType.number,
+                              validator: (value) => Validators.validateNumber(value, fieldName: 'Stock'),
                             ),
+                          ),
                         ],
                       ),
-                    );
-                  }),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _addImageField,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Image URL'),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Consumer<CategoryProvider>(
+                        builder: (context, categoryProvider, _) {
+                          if (categoryProvider.isLoading) {
+                            return const Loader();
+                          }
+                          
+                          return DropdownButtonFormField<String>(
+                            value: _selectedCategoryId,
+                            decoration: InputDecoration(
+                              labelText: 'Category',
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('Select a category'),
+                              ),
+                              ...categoryProvider.categories.map((category) {
+                                return DropdownMenuItem(
+                                  value: category.id,
+                                  child: Text(category.name),
+                                );
+                              }),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCategoryId = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Please select a category';
+                              }
+                              return null;
+                            },
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      CustomInput(
+                        controller: _descriptionController,
+                        label: 'Description',
+                        hint: 'Enter product description',
+                        maxLines: 5,
+                        validator: (value) => Validators.validateRequired(value, 'Description'),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               
               const SizedBox(height: 24),
               
-              // Error message
-              if (productProvider.error != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    productProvider.error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              
-              // Add Button
-              productProvider.isLoading
-                  ? const Loader()
-                  : CustomButton(
-                      text: 'Add Product',
-                      onPressed: _addProduct,
-                    ),
+              Consumer<ProductProvider>(
+                builder: (context, productProvider, _) {
+                  if (productProvider.isLoading) {
+                    return const Center(child: Loader());
+                  }
+                  
+                  return CustomButton(
+                    onPressed: _saveProduct,
+                    text: 'Save Product',
+                    variant: ButtonVariant.primary,
+                  );
+                },
+              ),
             ],
           ),
         ),

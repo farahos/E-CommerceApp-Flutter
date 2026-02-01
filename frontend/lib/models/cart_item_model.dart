@@ -1,49 +1,85 @@
-class CartItemModel {
+class CartItem {
   final String productId;
-  final String productName;
-  final double price;
-  final String image;
-  int quantity;
-  final int stock;
+  final String? productName;
+  final double? productPrice;
+  final String? productImage;
+  int qty;
 
-  CartItemModel({
+  CartItem({
     required this.productId,
-    required this.productName,
-    required this.price,
-    required this.image,
-    required this.quantity,
-    required this.stock,
+    this.productName,
+    this.productPrice,
+    this.productImage,
+    this.qty = 1,
   });
 
-  factory CartItemModel.fromJson(Map<String, dynamic> json, ProductModel product) {
-    return CartItemModel(
-      productId: json['productId'] ?? '',
-      productName: product.name,
-      price: product.price,
-      image: product.images.isNotEmpty ? product.images[0] : '',
-      quantity: json['qty'] ?? 1,
-      stock: product.stock,
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      productId: json['productId'],
+      qty: json['qty'] ?? 1,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'productId': productId,
-      'qty': quantity,
+      'qty': qty,
     };
   }
 
-  double get totalPrice => price * quantity;
+  double get total => (productPrice ?? 0) * qty;
 
-  void increaseQuantity() {
-    if (quantity < stock) {
-      quantity++;
-    }
+  CartItem copyWith({
+    String? productId,
+    String? productName,
+    double? productPrice,
+    String? productImage,
+    int? qty,
+  }) {
+    return CartItem(
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      productPrice: productPrice ?? this.productPrice,
+      productImage: productImage ?? this.productImage,
+      qty: qty ?? this.qty,
+    );
+  }
+}
+
+class CartModel {
+  final String userId;
+  final List<CartItem> items;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  CartModel({
+    required this.userId,
+    required this.items,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory CartModel.fromJson(Map<String, dynamic> json) {
+    return CartModel(
+      userId: json['userId'],
+      items: (json['items'] as List)
+          .map((item) => CartItem.fromJson(item))
+          .toList(),
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+    );
   }
 
-  void decreaseQuantity() {
-    if (quantity > 1) {
-      quantity--;
-    }
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'items': items.map((item) => item.toJson()).toList(),
+    };
+  }
+
+  int get itemCount => items.length;
+
+  double get totalPrice {
+    return items.fold(0, (sum, item) => sum + item.total);
   }
 }

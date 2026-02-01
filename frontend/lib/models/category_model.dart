@@ -15,11 +15,11 @@ class CategoryModel {
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      id: json['_id'] ?? '',
+      id: json['_id'],
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 
@@ -28,5 +28,21 @@ class CategoryModel {
       'name': name,
       'description': description,
     };
+  }
+
+  CategoryModel copyWith({
+    String? id,
+    String? name,
+    String? description,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return CategoryModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }

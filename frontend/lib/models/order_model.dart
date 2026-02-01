@@ -1,18 +1,21 @@
 class OrderItem {
   final String productId;
-  final int quantity;
+  final String? productName;
+  final int qty;
   final double price;
 
   OrderItem({
     required this.productId,
-    required this.quantity,
+    this.productName,
+    required this.qty,
     required this.price,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      productId: json['productId'] ?? '',
-      quantity: json['qty'] ?? 0,
+      productId: json['productId'],
+      productName: json['product']?['name'],
+      qty: json['qty'] ?? 0,
       price: (json['price'] ?? 0).toDouble(),
     );
   }
@@ -20,10 +23,12 @@ class OrderItem {
   Map<String, dynamic> toJson() {
     return {
       'productId': productId,
-      'qty': quantity,
+      'qty': qty,
       'price': price,
     };
   }
+
+  double get total => qty * price;
 }
 
 class OrderModel {
@@ -47,15 +52,15 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      id: json['_id'] ?? '',
-      userId: json['userId'] ?? '',
-      items: List<OrderItem>.from(
-        (json['items'] ?? []).map((item) => OrderItem.fromJson(item)),
-      ),
+      id: json['_id'],
+      userId: json['userId'],
+      items: (json['items'] as List)
+          .map((item) => OrderItem.fromJson(item))
+          .toList(),
       totalPrice: (json['totalPrice'] ?? 0).toDouble(),
       status: json['status'] ?? 'pending',
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 
@@ -72,37 +77,7 @@ class OrderModel {
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
   }
 
-  Color get statusColor {
-    switch (status) {
-      case 'pending':
-        return Colors.orange;
-      case 'paid':
-        return Colors.blue;
-      case 'shipped':
-        return Colors.purple;
-      case 'delivered':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String get statusText {
-    switch (status) {
-      case 'pending':
-        return 'Pending';
-      case 'paid':
-        return 'Paid';
-      case 'shipped':
-        return 'Shipped';
-      case 'delivered':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
+  String get formattedTime {
+    return '${createdAt.hour}:${createdAt.minute}';
   }
 }

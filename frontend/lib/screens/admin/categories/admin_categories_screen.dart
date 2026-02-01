@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:e_commerce_app/providers/category_provider.dart';
-import 'package:e_commerce_app/widgets/common/loader.dart';
-import 'package:e_commerce_app/widgets/common/confirm_dialog.dart';
+import '../../../providers/category_provider.dart';
+import '../../../widgets/common/custom_button.dart';
+import '../../../widgets/common/loader.dart';
+import '../../../widgets/common/confirm_dialog.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -12,33 +13,28 @@ class AdminCategoriesScreen extends StatefulWidget {
 }
 
 class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    });
   }
 
-  Future<void> _loadCategories() async {
-    final provider = Provider.of<CategoryProvider>(context, listen: false);
-    await provider.fetchCategories();
-  }
-
-  Future<void> _deleteCategory(String categoryId) async {
-    final confirmed = await showDialog(
+  Future<void> _deleteCategory(String id, String name) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => const ConfirmDialog(
+      builder: (context) => ConfirmDialog(
         title: 'Delete Category',
-        message: 'Are you sure you want to delete this category? This action cannot be undone.',
+        message: 'Are you sure you want to delete "$name"?',
       ),
     );
 
     if (confirmed == true) {
-      final provider = Provider.of<CategoryProvider>(context, listen: false);
-      final success = await provider.deleteCategory(categoryId);
+      final success = await Provider.of<CategoryProvider>(context, listen: false)
+          .deleteCategory(id);
       
-      if (success && context.mounted) {
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Category deleted successfully'),
@@ -49,156 +45,111 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
     }
   }
 
-  void _navigateToAddCategory() {
-    Navigator.pushNamed(context, '/admin/categories/add');
-  }
-
-  void _editCategory(String categoryId) {
-    final provider = Provider.of<CategoryProvider>(context, listen: false);
-    final category = provider.getCategoryById(categoryId);
-    
-    if (category != null) {
-      provider.selectCategory(category);
-      provider.setFormMode(FormMode.edit);
-      _navigateToAddCategory();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CategoryProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Categories'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _navigateToAddCategory,
-            tooltip: 'Add Category',
+            onPressed: () {
+              Navigator.pushNamed(context, '/admin/categories/add');
+            },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search categories...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          // TODO: Implement search
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      body: Consumer<CategoryProvider>(
+        builder: (context, categoryProvider, _) {
+          if (categoryProvider.isLoading) {
+            return const Center(child: Loader());
+          }
+
+          if (categoryProvider.error.isNotEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    categoryProvider.error,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => categoryProvider.fetchCategories(),
+                    child: const Text('Try Again'),
+                  ),
+                ],
               ),
-              onChanged: (value) {
-                // TODO: Implement search
-              },
-            ),
-          ),
+            );
+          }
 
-          // Categories List
-          Expanded(
-            child: provider.isLoading
-                ? const Loader()
-                : provider.error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                            const SizedBox(height: 16),
-                            Text(
-                              provider.error!,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadCategories,
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : provider.categories.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.category_outlined, size: 64, color: Colors.grey),
-                                const SizedBox(height: 16),
-                                const Text('No categories found'),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _navigateToAddCategory,
-                                  child: const Text('Add First Category'),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: provider.categories.length,
-                            itemBuilder: (context, index) {
-                              final category = provider.categories[index];
-                              return _buildCategoryCard(category);
-                            },
-                          ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddCategory,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+          if (categoryProvider.categories.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.category_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('No categories found'),
+                  const SizedBox(height: 24),
+                  CustomButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/admin/categories/add');
+                    },
+                    text: 'Add First Category',
+                    variant: ButtonVariant.primary,
+                  ),
+                ],
+              ),
+            );
+          }
 
-  Widget _buildCategoryCard(category) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: Colors.blue,
-          child: Icon(Icons.category, color: Colors.white),
-        ),
-        title: Text(
-          category.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Text(
-          category.description,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: () => _editCategory(category.id),
-              tooltip: 'Edit',
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-              onPressed: () => _deleteCategory(category.id),
-              tooltip: 'Delete',
-            ),
-          ],
-        ),
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: categoryProvider.categories.length,
+            itemBuilder: (context, index) {
+              final category = categoryProvider.categories[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.category),
+                  ),
+                  title: Text(category.name),
+                  subtitle: Text(
+                    category.description.length > 100
+                        ? '${category.description.substring(0, 100)}...'
+                        : category.description,
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () {
+                          // Navigate to edit category screen
+                          // Navigator.pushNamed(
+                          //   context,
+                          //   '/admin/categories/edit/${category.id}',
+                          // );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                        onPressed: () => _deleteCategory(category.id, category.name),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
